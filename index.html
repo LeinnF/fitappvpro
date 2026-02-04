@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+    <title>Fitness Tracker</title>
+    <meta name="description" content="Günlük besin, kalori ve su takibi uygulaması.">
+
+    <!-- Icons and Manifest -->
+    <link rel="icon" href="w.jpg" type="image/jpg">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="w.jpg">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- PWA Settings -->
+    <meta name="theme-color" content="#1e3a5f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+
+<body>
+
+    <main>
+        <!-- Add Food Section -->
+        <section id="input-section">
+            <h2><i class="fas fa-plus-circle"></i> Besin Girişi</h2>
+            <div class="input-group">
+                <input type="text" id="food-name" placeholder="Besin Adı" aria-label="Besin Adı">
+                <input type="number" id="food-cal" placeholder="Kalori" aria-label="Kalori">
+                <input type="number" id="food-protein" placeholder="Protein (g)" aria-label="Protein">
+                <input type="number" id="food-carb" placeholder="Karbonhidrat (g)" aria-label="Karbonhidrat">
+                <input type="number" id="food-fat" placeholder="Yağ (g)" aria-label="Yağ">
+                <input type="number" id="food-multiplier" placeholder="Porsiyon" value="1" min="0.1" step="0.1"
+                    aria-label="Porsiyon">
+            </div>
+            <div style="text-align: center; margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
+                <button id="add-food-btn"><i class="fas fa-plus"></i> Ekle</button>
+                <button id="scan-food-btn" style="background-color: var(--accent-color);"><i class="fas fa-camera"></i>
+                    Fotoğraf Çek</button>
+            </div>
+        </section>
+
+        <!-- AI Scan Modal -->
+        <div id="ai-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h3 id="modal-title">Besin Analizcisi 🤖</h3>
+
+                <!-- Step 1: API Key Input -->
+                <div id="api-key-section" style="display: none;">
+                    <p>Yapay zeka özelliğini kullanmak için ücretsiz bir <strong>Google Gemini API Anahtarı</strong>
+                        gereklidir.</p>
+                    <input type="password" id="api-key-input" placeholder="API Anahtarınızı yapıştırın"
+                        style="width: 100%; box-sizing: border-box;">
+                    <p style="font-size: 0.8rem; color: #666;">Anahtarınız sadece tarayıcınızda saklanır.</p>
+                    <button id="save-api-key-btn" style="width: 100%;">Kaydet ve Devam Et</button>
+                    <p style="font-size: 0.8rem; margin-top: 10px;"><a href="https://aistudio.google.com/app/apikey"
+                            target="_blank">Anahtar Almak İçin Tıklayın</a></p>
+                </div>
+
+                <!-- Step 2: Image Selection -->
+                <div id="image-section">
+                    <div class="file-upload-wrapper">
+                        <button id="camera-btn" style="width: 100%; margin-bottom: 10px;"><i class="fas fa-camera"></i>
+                            Fotoğraf Çek</button>
+                        <input type="file" id="file-input" accept="image/*" style="display: none;">
+                        <button id="gallery-btn" style="width: 100%; background-color: var(--secondary-color);"><i
+                                class="fas fa-image"></i> Galeriden Seç</button>
+                    </div>
+                    <div id="preview-container" style="display: none; margin-top: 15px; text-align: center;">
+                        <img id="image-preview" src="" alt="Preview"
+                            style="max-width: 100%; max-height: 300px; border-radius: 10px;">
+                        <button id="analyze-btn" style="width: 100%; margin-top: 10px; background-color: #28a745;">🔍
+                            Analiz Et</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Loading & Result -->
+                <div id="loading-section" style="display: none; text-align: center;">
+                    <div class="spinner"></div>
+                    <p>Yapay zeka besini inceliyor...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Foods Section -->
+        <section id="quick-food-section">
+            <h2><i class="fas fa-bolt"></i> Hazır Besinler</h2>
+            <div class="quick-food-grid" id="quick-food-container">
+                <!-- Buttons will be generated by JS -->
+            </div>
+        </section>
+
+        <!-- Summary Section -->
+        <section id="summary-section">
+            <h2><i class="fas fa-chart-pie"></i> Günlük Özet</h2>
+            <div style="text-align: center; margin-bottom: 15px;">
+                <input type="date" id="date-picker" aria-label="Tarih Seç">
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Besin</th>
+                            <th>Kalori</th>
+                            <th>Protein</th>
+                            <th>Karb.</th>
+                            <th>Yağ</th>
+                            <th>Porsiyon</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="food-table-body">
+                        <!-- Rows will be generated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="summary-totals">
+                <p id="totals"></p>
+                <p id="remaining"></p>
+                <p id="water-total"></p>
+            </div>
+        </section>
+
+        <!-- Water Section -->
+        <section id="water-section">
+            <h2><i class="fas fa-glass-water"></i> Su Takibi (0.5L)</h2>
+            <div class="water-container">
+                <div class="water-buttons">
+                    <button id="add-water-btn"><i class="fas fa-plus"></i> Ekle</button>
+                    <button id="remove-water-btn"><i class="fas fa-minus"></i> Çıkar</button>
+                </div>
+                <div class="progress-bar-container">
+                    <div id="water-progress" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"
+                        aria-valuemax="100"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recipes Section -->
+        <section id="recipes-section">
+            <h2 id="recipes-header">
+                <i class="fas fa-book-open"></i> Tarifler <i class="fas fa-chevron-down" id="recipes-icon"></i>
+            </h2>
+            <div id="recipes-content">
+                <div class="recipe">
+                    <button class="recipe-toggle">Pankek Tarifi <i class="fas fa-chevron-right"></i></button>
+                    <div class="recipe-content">
+                        <p><strong>Malzemeler:</strong> 2 yumurta, 1 çay bardağı süt, 1.5 su bardağı un, 1 paket
+                            kabartma tozu.</p>
+                        <p><strong>Yapılışı:</strong> Tüm malzemeleri çırpın ve tavada pişirin.</p>
+                    </div>
+                </div>
+
+                <div class="recipe">
+                    <button class="recipe-toggle">Tost Tarifi <i class="fas fa-chevron-right"></i></button>
+                    <div class="recipe-content">
+                        <p><strong>Malzemeler:</strong> 2 dilim ekmek, kaşar peyniri, tereyağı.</p>
+                        <p><strong>Yapılışı:</strong> Ekmeğin arasına peyniri koyun, üzerine yağ sürüp tost makinesinde
+                            basınız.</p>
+                    </div>
+                </div>
+                <!-- More recipes can be added here -->
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
