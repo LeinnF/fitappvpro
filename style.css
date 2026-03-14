@@ -1450,12 +1450,15 @@ textarea#ai-prompt:focus {
     }
 
     table {
-        min-width: 440px;
-        font-size: 0.8rem;
+        min-width: 560px; /* enough for all columns to show */
+        font-size: 0.78rem;
+        table-layout: auto;
+        width: 100%;
     }
 
     th, td {
-        padding: 8px 6px;
+        padding: 10px 8px;
+        white-space: nowrap;
     }
 
     /* Modals */
