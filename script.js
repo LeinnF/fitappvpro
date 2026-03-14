@@ -65,7 +65,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add default category filter
     filterCategory('breakfast');
+
+    // Collapse input section by default (user opens when needed)
+    const collapsible = document.getElementById('input-collapsible');
+    const icon = document.getElementById('input-toggle-icon');
+    const h2 = collapsible ? collapsible.closest('section').querySelector('h2') : null;
+    if (collapsible) collapsible.classList.add('collapsed');
+    if (icon) icon.classList.add('rotated');
+    if (h2) h2.classList.remove('open');
 });
+
+function toggleInputSection() {
+    const collapsible = document.getElementById('input-collapsible');
+    const icon = document.getElementById('input-toggle-icon');
+    const h2 = document.querySelector('#input-section h2');
+    if (!collapsible) return;
+
+    const isCollapsed = collapsible.classList.toggle('collapsed');
+    icon.classList.toggle('rotated', isCollapsed);
+    h2.classList.toggle('open', !isCollapsed);
+}
 
 
 /* Category Logic */

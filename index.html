@@ -30,7 +30,11 @@
     <main class="dashboard-grid">
         <div class="left-column">
             <section id="input-section">
-                <h2><i class="fas fa-edit"></i> Besin Girişi</h2>
+                <h2 onclick="toggleInputSection()" style="cursor:pointer; user-select:none; gap: 12px;">
+                    <span><i class="fas fa-edit"></i> Besin Girişi</span>
+                    <i class="fas fa-chevron-up" id="input-toggle-icon" style="font-size:0.9rem; color:var(--text-secondary); transition: transform 0.3s; margin-left: auto; flex-shrink: 0;"></i>
+                </h2>
+                <div id="input-collapsible">
                 <div class="input-group">
                     <input type="text" id="food-name" placeholder="Besin Adı">
                     <div style="display: flex; gap: 10px;">
@@ -68,6 +72,7 @@
                 <!-- AI Button -->
                 <button onclick="openAIModal()" class="ai-btn full-width-btn" style="margin-top: 10px;"><i
                         class="fas fa-magic"></i> AI ile Ekle</button>
+                </div><!-- end input-collapsible -->
             </section>
 
             <section id="water-section">
