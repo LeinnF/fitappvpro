@@ -12,6 +12,8 @@ let allData = JSON.parse(localStorage.getItem('dailyData')) || {};
 let today = new Date().toISOString().split('T')[0];
 let currentDate = today;
 let isDeleteMode = false;
+let isEditMode = false;
+let currentEditingFood = null;
 
 if (!allData[today]) allData[today] = { foodData: [], water: 0 };
 
@@ -287,6 +289,94 @@ function closeRecipePopup() {
     document.getElementById('recipe-popup').style.display = 'none';
 }
 
+/* Edit Recipe Mode */
+function toggleEditMode() {
+    isEditMode = !isEditMode;
+    const btn = document.getElementById('edit-mode-btn');
+    const grid = document.querySelector('.quick-food-grid');
+
+    if (isEditMode) {
+        isDeleteMode = false; // Turn off delete mode if on
+        document.getElementById('delete-mode-btn').classList.remove('active');
+        grid.classList.remove('delete-mode');
+        
+        btn.classList.add('active');
+        grid.classList.add('edit-mode');
+    } else {
+        btn.classList.remove('active');
+        grid.classList.remove('edit-mode');
+    }
+}
+
+function openRecipeEditor(name) {
+    currentEditingFood = name;
+    const food = presetFoods[name];
+    const modal = document.getElementById('edit-recipe-modal');
+    
+    document.getElementById('recipe-edit-target').textContent = name;
+    document.getElementById('edit-ingredients').value = food.recipe ? food.recipe.ingredients : '';
+    document.getElementById('edit-instructions').value = food.recipe ? food.recipe.instructions : '';
+    
+    modal.style.display = 'block';
+}
+
+function closeEditRecipeModal() {
+    document.getElementById('edit-recipe-modal').style.display = 'none';
+    currentEditingFood = null;
+}
+
+function saveRecipe() {
+    if (!currentEditingFood) return;
+    
+    const ingredients = document.getElementById('edit-ingredients').value.trim();
+    const instructions = document.getElementById('edit-instructions').value.trim();
+    
+    if (!ingredients && !instructions) {
+        deleteRecipe();
+        return;
+    }
+    
+    // Update presetFoods
+    presetFoods[currentEditingFood].recipe = {
+        ingredients: ingredients,
+        instructions: instructions
+    };
+    
+    // Save custom favorites if it's a custom food
+    const customFavorites = JSON.parse(localStorage.getItem('customFavorites')) || {};
+    if (customFavorites[currentEditingFood]) {
+        customFavorites[currentEditingFood].recipe = presetFoods[currentEditingFood].recipe;
+        localStorage.setItem('customFavorites', JSON.stringify(customFavorites));
+    } else {
+        // Even if it's a preset food, we should save its recipe override in customFavorites
+        customFavorites[currentEditingFood] = presetFoods[currentEditingFood];
+        localStorage.setItem('customFavorites', JSON.stringify(customFavorites));
+    }
+    
+    closeEditRecipeModal();
+    renderQuickButtons();
+    alert('Tarif başarıyla kaydedildi!');
+}
+
+function deleteRecipe() {
+    if (!currentEditingFood) return;
+    
+    if (presetFoods[currentEditingFood].recipe) {
+        delete presetFoods[currentEditingFood].recipe;
+        
+        // Update localStorage
+        const customFavorites = JSON.parse(localStorage.getItem('customFavorites')) || {};
+        if (customFavorites[currentEditingFood]) {
+            delete customFavorites[currentEditingFood].recipe;
+            localStorage.setItem('customFavorites', JSON.stringify(customFavorites));
+        }
+    }
+    
+    closeEditRecipeModal();
+    renderQuickButtons();
+    alert('Tarif silindi.');
+}
+
 function addFood() {
     const name = document.getElementById('food-name').value.trim();
     const cal = parseFloat(document.getElementById('food-cal').value);
@@ -312,6 +402,11 @@ function addPresetFood(name) {
         return;
     }
 
+    if (isEditMode) {
+        openRecipeEditor(name);
+        return;
+    }
+
     if (!presetFoods[name]) return;
     const food = presetFoods[name];
 
@@ -333,14 +428,15 @@ function toggleDeleteMode() {
     const grid = document.querySelector('.quick-food-grid');
 
     if (isDeleteMode) {
+        isEditMode = false; // Turn off edit mode if on
+        document.getElementById('edit-mode-btn').classList.remove('active');
+        grid.classList.remove('edit-mode');
+        
         btn.classList.add('active');
         grid.classList.add('delete-mode');
-        // Change icon to times
-        // btn.innerHTML = '<i class="fas fa-times"></i>'; 
     } else {
         btn.classList.remove('active');
         grid.classList.remove('delete-mode');
-        // btn.innerHTML = '<i class="fas fa-trash"></i>';
     }
 }
 

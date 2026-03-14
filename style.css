@@ -845,15 +845,20 @@ button.full-width-btn {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    line-height: 0;
     padding: 0;
 }
 
-#delete-mode-btn i {
+#delete-mode-btn i, 
+#edit-mode-btn i {
     margin: 0;
     padding: 0;
     font-size: 14px;
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;  /* Match button size */
+    height: 32px; /* Match button size */
+    line-height: 1;
 }
 
 #delete-mode-btn:hover {
@@ -864,6 +869,38 @@ button.full-width-btn {
 #delete-mode-btn.active {
     background: #EF4444;
     color: white;
+}
+
+#edit-mode-btn {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+}
+
+#edit-mode-btn:hover {
+    background: #FEF3C7; /* Amber 50 */
+    color: #D97706; /* Amber 600 */
+}
+
+#edit-mode-btn.active {
+    background: #F59E0B; /* Amber 500 */
+    color: white;
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
 }
 
 @keyframes pulse {
@@ -889,6 +926,32 @@ button.full-width-btn {
 
 .quick-food-grid.delete-mode button:hover {
     background-color: #FEB2B2;
+}
+
+/* Edit Mode */
+.quick-food-grid.edit-mode button {
+    border: 1px solid #F59E0B;
+    background-color: #FFFBEB; /* Amber 50 */
+    position: relative;
+    cursor: pointer;
+    animation: pulse-orange 2s infinite;
+}
+
+.quick-food-grid.edit-mode button:hover {
+    background-color: #FEF3C7;
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+}
+
+@keyframes pulse-orange {
+    0% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    }
 }
 
 /* SVG Chart */
