@@ -93,7 +93,6 @@ main.dashboard-grid {
     grid-template-columns: 1fr;
     gap: 24px;
     width: 100%;
-    overflow: hidden;
 }
 
 .main-header {
@@ -1269,11 +1268,21 @@ textarea#ai-prompt:focus {
         border-radius: 18px;
     }
 
-    /* Keep original table layout but make it scrollable */
+    /* Keep original table layout, enforce proper display, make scrollable */
     .table-container {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         border-radius: 12px;
+    }
+
+    table { display: table !important; width: max-content; min-width: 100%; }
+    thead { display: table-header-group !important; }
+    tbody { display: table-row-group !important; }
+    tr { display: table-row !important; }
+    th, td { display: table-cell !important; }
+
+    table {
+        min-width: 480px;
     }
 
     section:hover {
@@ -1302,15 +1311,6 @@ textarea#ai-prompt:focus {
         padding: 8px 4px;
         font-size: 0.78rem;
         min-height: 38px;
-    }
-
-    .table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    table {
-        min-width: 480px;
     }
 }
 
