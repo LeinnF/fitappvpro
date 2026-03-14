@@ -98,6 +98,8 @@ function loadFromFirebase() {
             for (const [name, data] of Object.entries(cloudFavs)) {
                 presetFoods[name] = data;
             }
+            // Sync cloud favorites to localStorage to avoid "cannot delete" errors
+            localStorage.setItem('customFavorites', JSON.stringify(cloudFavs));
             renderQuickButtons();
         } else {
             loadFavorites();
@@ -341,6 +343,7 @@ function addToFavorites() {
     renderIconPickers();
     // Switch to selected category so user sees the new item
     filterCategory(category);
+    clearFoodInputs();
     alert(`${name} favorilere eklendi!`);
 }
 
