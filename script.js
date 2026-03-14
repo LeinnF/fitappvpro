@@ -1,474 +1,728 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // --- Constants & Config ---
-    const TARGETS = {
-        cal: 2700,
-        protein: 150,
-        carb: 350,
-        fat: 70,
-        water: 4
-    };
+// Load settings from localStorage or use defaults
+const defaultSettings = {
+    cal: 2500,
+    protein: 140,
+    carb: 350,
+    fat: 70,
+    water: 4
+};
+let target = JSON.parse(localStorage.getItem('userSettings')) || defaultSettings;
 
-    const PRESET_FOODS = {
-        'Pankek': { cal: 1010, protein: 29.8, carb: 39.5, fat: 18, icon: 'fa-bread-slice' },
-        'Tost': { cal: 920, protein: 44.5, carb: 99, fat: 39, icon: 'fa-bread-slice' },
-        'Menemen Harcı(350g)': { cal: 180, protein: 5.6, carb: 15, fat: 10, icon: 'fa-utensils' },
-        'Yumurta(L)': { cal: 90, protein: 7.5, carb: 0.3, fat: 6.5, icon: 'fa-egg' },
-        'Kaşar Peynir(Dilim)': { cal: 66, protein: 4.6, carb: 0.4, fat: 5, icon: 'fa-cheese' },
-        'Tam Döner': { cal: 680, protein: 32, carb: 203, fat: 13, icon: 'fa-utensils' },
-        'Makarna(100g)': { cal: 158, protein: 5.8, carb: 30.8, fat: 0.9, icon: 'fa-utensils' },
-        'Pilav(100g)': { cal: 132, protein: 2.9, carb: 30.9, fat: 0, icon: 'fa-utensils' },
-        'Tavuk(100g)': { cal: 163, protein: 28, carb: 1, fat: 5.3, icon: 'fa-drumstick-bite' },
-        'Tavuk Schnitzel(100g)': { cal: 296, protein: 10, carb: 22.5, fat: 18.5, icon: 'fa-drumstick-bite' },
-        'Yoğurt(100g)': { cal: 46, protein: 3.4, carb: 4.1, fat: 1.5, icon: 'fa-utensils' },
-        'Shake': { cal: 775, protein: 40, carb: 113, fat: 18, icon: 'fa-blender' },
-        'Nescafe 3’ü 1 Arada': { cal: 81, protein: 0.51, carb: 15.6, fat: 1.94, icon: 'fa-mug-hot' },
-        'Protein Tozu(25g)': { cal: 85, protein: 18.3, carb: 1.9, fat: 0.3, icon: 'fa-dumbbell' },
-        'Creatin(5g)': { cal: 0, protein: 0, carb: 0, fat: 0, icon: 'fa-dumbbell' }
-    };
+let allData = JSON.parse(localStorage.getItem('dailyData')) || {};
+let today = new Date().toISOString().split('T')[0];
+let currentDate = today;
+let isDeleteMode = false;
 
-    // --- State Management ---
-    let allData = JSON.parse(localStorage.getItem('dailyData')) || {};
-    const today = new Date().toISOString().split('T')[0];
-    let currentDate = today;
+if (!allData[today]) allData[today] = { foodData: [], water: 0 };
 
-    // Ensure today's entry exists
-    if (!allData[today]) {
-        allData[today] = { foodData: [], water: 0 };
-    }
-
-    // --- UI Elements ---
-    const elements = {
-        datePicker: document.getElementById('date-picker'),
-        foodName: document.getElementById('food-name'),
-        foodCal: document.getElementById('food-cal'),
-        foodProtein: document.getElementById('food-protein'),
-        foodCarb: document.getElementById('food-carb'),
-        foodFat: document.getElementById('food-fat'),
-        foodMultiplier: document.getElementById('food-multiplier'),
-        addFoodBtn: document.getElementById('add-food-btn'),
-        quickFoodContainer: document.getElementById('quick-food-container'),
-        tableBody: document.getElementById('food-table-body'),
-        totals: document.getElementById('totals'),
-        remaining: document.getElementById('remaining'),
-        waterTotal: document.getElementById('water-total'),
-        waterProgress: document.getElementById('water-progress'),
-        addWaterBtn: document.getElementById('add-water-btn'),
-        removeWaterBtn: document.getElementById('remove-water-btn'),
-        recipesHeader: document.getElementById('recipes-header'),
-        recipesContent: document.getElementById('recipes-content'),
-        recipesIcon: document.getElementById('recipes-icon')
-    };
-
-    // --- Initialization ---
-    elements.datePicker.value = currentDate;
-    renderQuickFoodButtons();
-    updateUI();
-
-    // --- Event Listeners ---
-    elements.datePicker.addEventListener('change', (e) => {
-        currentDate = e.target.value;
-        if (!allData[currentDate]) {
-            allData[currentDate] = { foodData: [], water: 0 };
+const presetFoods = {
+    'Pankek': {
+        cal: 1010, protein: 29.8, carb: 39.5, fat: 18, category: 'breakfast',
+        recipe: {
+            ingredients: "1 yumurta, 1 çay bardağı süt, 1.5 çay bardağı un, 1 paket kabartma tozu.",
+            instructions: "Tüm malzemeleri çırpın, yağsız tavada küçük yuvarlaklar halinde pişirin."
         }
-        updateUI();
-    });
+    },
+    'Yumurta(L)': { cal: 90, protein: 7.5, carb: 0.3, fat: 6.5, category: 'breakfast' },
+    'Tost': {
+        cal: 920, protein: 44.5, carb: 99, fat: 39, category: 'breakfast',
+        recipe: {
+            ingredients: "2 dilim tam buğday ekmeği, 30g kaşar peyniri.",
+            instructions: "Peyniri ekmeklerin arasına koyup tost makinesinde basın."
+        }
+    },
+    'Menemen Harcı(350g)': { cal: 180, protein: 5.6, carb: 15, fat: 10, category: 'breakfast' },
+    'Kaşar Peynir(Dilim)': { cal: 66, protein: 4.6, carb: 0.4, fat: 5, category: 'breakfast' },
+    'Nescafe 3’ü 1 Arada': { cal: 81, protein: 0.51, carb: 15.6, fat: 1.94, category: 'supplements' },
 
-    elements.addFoodBtn.addEventListener('click', handleAddFood);
+    'Tam Döner': { cal: 680, protein: 32, carb: 203, fat: 13, category: 'main' },
+    'Makarna(100g)': { cal: 158, protein: 5.8, carb: 30.8, fat: 0.9, category: 'main' },
+    'Pilav(100g)': { cal: 132, protein: 2.9, carb: 30.9, fat: 0, category: 'main' },
+    'Tavuk(100g)': { cal: 163, protein: 28, carb: 1, fat: 5.3, category: 'main' },
+    'Tavuk Schnitzel(100g)': { cal: 296, protein: 10, carb: 22.5, fat: 18.5, category: 'main' },
+    'Yoğurt(100g)': { cal: 46, protein: 3.4, carb: 4.1, fat: 1.5, category: 'main' },
 
-    elements.addWaterBtn.addEventListener('click', () => updateWater(0.5));
-    elements.removeWaterBtn.addEventListener('click', () => updateWater(-0.5));
+    'Protein Tozu(25g)': { cal: 85, protein: 18.3, carb: 1.9, fat: 0.3, category: 'supplements' },
+    'Creatin(5g)': { cal: 0, protein: 0, carb: 0, fat: 0, category: 'supplements' },
+    'Shake': { cal: 775, protein: 40, carb: 113, fat: 18, category: 'supplements' }
+};
 
-    elements.recipesHeader.addEventListener('click', toggleRecipes);
+let currentCategory = null;
 
-    document.querySelectorAll('.recipe-toggle').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const content = this.nextElementSibling;
-            const icon = this.querySelector('i');
-            content.classList.toggle('open');
-
-            if (content.classList.contains('open')) {
-                icon.classList.remove('fa-chevron-right');
-                icon.classList.add('fa-chevron-down');
-            } else {
-                icon.classList.remove('fa-chevron-down');
-                icon.classList.add('fa-chevron-right');
-            }
-        });
-    });
-
-    // --- Functions ---
-
-    function renderQuickFoodButtons() {
-        elements.quickFoodContainer.innerHTML = '';
-        Object.keys(PRESET_FOODS).forEach(name => {
-            const food = PRESET_FOODS[name];
-            const btn = document.createElement('button');
-            const iconClass = food.icon || 'fa-utensils';
-            btn.innerHTML = `<i class="fas ${iconClass}"></i> ${name}`;
-            btn.addEventListener('click', () => addPresetFood(name));
-            elements.quickFoodContainer.appendChild(btn);
-        });
+document.addEventListener('DOMContentLoaded', () => {
+    // Set date picker value
+    const datePicker = document.getElementById('date-picker');
+    if (datePicker) {
+        datePicker.value = currentDate;
     }
 
-    function handleAddFood() {
-        const name = elements.foodName.value.trim();
-        const cal = parseFloat(elements.foodCal.value);
-        const protein = parseFloat(elements.foodProtein.value);
-        const carb = parseFloat(elements.foodCarb.value);
-        const fat = parseFloat(elements.foodFat.value);
-        const multiplier = parseFloat(elements.foodMultiplier.value) || 1;
+    // Load custom favorites
+    loadFavorites();
 
-        if (!name || isNaN(cal) || isNaN(protein) || isNaN(carb) || isNaN(fat)) {
-            alert('Lütfen tüm alanları doldurun!');
+    // Initial Render
+    updateTable(currentDate);
+    renderQuickButtons();
+
+    // Add default category filter
+    filterCategory('breakfast');
+});
+
+
+/* Category Logic */
+function filterCategory(category) {
+    currentCategory = category;
+
+    // Update active class
+    document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('onclick').includes(`'${category}'`)) {
+            btn.classList.add('active');
+        }
+    });
+
+    renderQuickButtons();
+}
+
+/* Custom Dropdown Logic */
+function toggleDropdown() {
+    const dropdown = document.getElementById('custom-category-dropdown');
+    dropdown.classList.toggle('active');
+}
+
+function selectOption(value, text) {
+    // Update displayed text
+    const display = document.querySelector('.dropdown-selected');
+    display.textContent = text;
+
+    // Update hidden select value
+    const select = document.getElementById('food-category-input');
+    select.value = value;
+
+    // Update active class on options
+    document.querySelectorAll('.dropdown-option').forEach(opt => {
+        opt.classList.remove('selected');
+        if (opt.textContent === text) {
+            opt.classList.add('selected');
+        }
+    });
+
+    // Close dropdown
+    toggleDropdown();
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('custom-category-dropdown');
+    if (dropdown && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('active');
+    }
+});
+
+function renderQuickButtons() {
+    const container = document.querySelector('.quick-food-grid');
+    container.innerHTML = ''; // Clear existing
+
+    // If no category selected, show nothing
+    if (!currentCategory) {
+        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">Lütfen bir kategori seçin.</p>';
+        return;
+    }
+
+    for (const [name, data] of Object.entries(presetFoods)) {
+        // Filter logic
+        let shouldShow = false;
+
+        if (currentCategory === 'favorites') {
+            if (data.category === 'custom') shouldShow = true;
+        } else {
+            if (data.category === currentCategory) shouldShow = true;
+        }
+
+        if (shouldShow) {
+            renderQuickFoodButton(name, container);
+        }
+    }
+}
+
+// ... existing code ...
+
+document.getElementById('date-picker').value = today;
+
+function changeDate() {
+    currentDate = document.getElementById('date-picker').value;
+    if (!allData[currentDate]) allData[currentDate] = { foodData: [], water: 0 };
+    updateTable(currentDate);
+}
+
+function changeDateBy(days) {
+    const date = new Date(currentDate);
+    date.setDate(date.getDate() + days);
+    currentDate = date.toISOString().split('T')[0];
+    document.getElementById('date-picker').value = currentDate;
+    changeDate();
+}
+
+function addToFavorites() {
+    const name = document.getElementById('food-name').value.trim();
+    const cal = parseFloat(document.getElementById('food-cal').value);
+    const protein = parseFloat(document.getElementById('food-protein').value);
+    const carb = parseFloat(document.getElementById('food-carb').value);
+    const fat = parseFloat(document.getElementById('food-fat').value);
+
+    if (!name || isNaN(cal) || isNaN(protein) || isNaN(carb) || isNaN(fat)) {
+        alert('Lütfen tüm alanları doldurun!');
+        return;
+    }
+
+    const category = document.getElementById('food-category-input').value;
+
+    if (presetFoods[name]) {
+        alert('Bu besin zaten hızlı ekle menüsünde mevcut!');
+        return;
+    }
+
+    // Save with selected category
+    presetFoods[name] = { cal, protein, carb, fat, category: category };
+
+    // Save to localStorage
+    const customFavorites = JSON.parse(localStorage.getItem('customFavorites')) || {};
+    customFavorites[name] = { cal, protein, carb, fat, category: category };
+    localStorage.setItem('customFavorites', JSON.stringify(customFavorites));
+
+    // Update UI
+    renderQuickButtons();
+    // Switch to selected category so user sees the new item
+    filterCategory(category);
+    alert(`${name} favorilere eklendi!`);
+}
+
+function loadFavorites() {
+    const customFavorites = JSON.parse(localStorage.getItem('customFavorites')) || {};
+    for (const [name, data] of Object.entries(customFavorites)) {
+        if (!presetFoods[name]) {
+            // Use saved category or default to 'custom' if missing
+            presetFoods[name] = { ...data, category: data.category || 'custom' };
+        }
+    }
+}
+
+function renderQuickFoodButton(name, containerElement) {
+    const container = containerElement || document.querySelector('.quick-food-grid');
+    const food = presetFoods[name];
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'quick-food-wrapper';
+
+    const btn = document.createElement('button');
+    btn.onclick = () => addPresetFood(name);
+
+    let icon = 'fa-utensils';
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('pankek') || lowerName.includes('pan')) icon = 'fa-cookie';
+    else if (lowerName.includes('tost') || lowerName.includes('ekmek')) icon = 'fa-bread-slice';
+    else if (lowerName.includes('yumurta')) icon = 'fa-egg';
+    else if (lowerName.includes('peynir') || lowerName.includes('kaşar')) icon = 'fa-cheese';
+    else if (lowerName.includes('shake') || lowerName.includes('içecek')) icon = 'fa-blender';
+    else if (lowerName.includes('kahve') || lowerName.includes('nescafe')) icon = 'fa-mug-hot';
+    else if (lowerName.includes('protein') || lowerName.includes('creatin')) icon = 'fa-dumbbell';
+    else if (lowerName.includes('makarna')) icon = 'fa-bowl-food';
+    else if (lowerName.includes('pilav')) icon = 'fa-bowl-rice';
+    else if (lowerName.includes('tavuk')) icon = 'fa-drumstick-bite';
+    else if (lowerName.includes('döner') || lowerName.includes('et')) icon = 'fa-hotdog';
+
+    const displayName = name.replace(/([a-zA-ZçğıöşüÇĞİÖŞÜ0-9])\(/g, '$1 (');
+
+    if (food.category === 'custom') {
+        icon = 'fa-star';
+        btn.innerHTML = `<i class="fas ${icon}" style="color: #FBBF24;"></i> <span>${displayName}</span>`;
+    } else {
+        btn.innerHTML = `<i class="fas ${icon}"></i> <span>${displayName}</span>`;
+    }
+
+    wrapper.appendChild(btn);
+
+    // Add info icon if recipe exists
+    if (food.recipe) {
+        const infoBtn = document.createElement('div');
+        infoBtn.className = 'info-icon';
+        infoBtn.innerHTML = '<i class="fas fa-info"></i>';
+        infoBtn.onclick = (e) => {
+            e.stopPropagation();
+            showRecipePopup(name, food.recipe);
+        };
+        wrapper.appendChild(infoBtn);
+    }
+
+    container.appendChild(wrapper);
+}
+
+function showRecipePopup(name, recipe) {
+    const popup = document.getElementById('recipe-popup');
+    document.getElementById('recipe-title').textContent = name;
+    document.getElementById('recipe-ingredients').textContent = recipe.ingredients;
+    document.getElementById('recipe-instructions').textContent = recipe.instructions;
+    popup.style.display = 'block';
+}
+
+function closeRecipePopup() {
+    document.getElementById('recipe-popup').style.display = 'none';
+}
+
+function addFood() {
+    const name = document.getElementById('food-name').value.trim();
+    const cal = parseFloat(document.getElementById('food-cal').value);
+    const protein = parseFloat(document.getElementById('food-protein').value);
+    const carb = parseFloat(document.getElementById('food-carb').value);
+    const fat = parseFloat(document.getElementById('food-fat').value);
+    const multiplier = parseFloat(document.getElementById('food-multiplier').value) || 1;
+
+    if (!name || isNaN(cal) || isNaN(protein) || isNaN(carb) || isNaN(fat)) {
+        alert('Lütfen tüm alanları doldurun!');
+        return;
+    }
+
+    allData[currentDate].foodData.push({ name, cal, protein, carb, fat, multiplier });
+    saveData();
+    updateTable(currentDate);
+    clearFoodInputs();
+}
+
+function addPresetFood(name) {
+    if (isDeleteMode) {
+        deleteFavorite(name);
+        return;
+    }
+
+    if (!presetFoods[name]) return;
+    const food = presetFoods[name];
+
+    allData[currentDate].foodData.push({
+        name,
+        cal: food.cal,
+        protein: food.protein,
+        carb: food.carb,
+        fat: food.fat,
+        multiplier: 1
+    });
+    saveData();
+    updateTable(currentDate);
+}
+
+function toggleDeleteMode() {
+    isDeleteMode = !isDeleteMode;
+    const btn = document.getElementById('delete-mode-btn');
+    const grid = document.querySelector('.quick-food-grid');
+
+    if (isDeleteMode) {
+        btn.classList.add('active');
+        grid.classList.add('delete-mode');
+        // Change icon to times
+        // btn.innerHTML = '<i class="fas fa-times"></i>'; 
+    } else {
+        btn.classList.remove('active');
+        grid.classList.remove('delete-mode');
+        // btn.innerHTML = '<i class="fas fa-trash"></i>';
+    }
+}
+
+function deleteFavorite(name) {
+    const customFavorites = JSON.parse(localStorage.getItem('customFavorites')) || {};
+
+    if (customFavorites[name]) {
+        if (confirm(`${name} favorilerden silinsin mi?`)) {
+            // Delete from storage
+            delete customFavorites[name];
+            localStorage.setItem('customFavorites', JSON.stringify(customFavorites));
+
+            // Delete from memory
+            if (presetFoods[name]) {
+                delete presetFoods[name];
+            }
+
+            // Remove from UI
+            const buttons = document.querySelectorAll('.quick-food-grid button');
+            buttons.forEach(btn => {
+                // Removing icon HTML to check text content safely
+                if (btn.textContent.trim() === name) {
+                    btn.remove();
+                }
+            });
+
+            // If clean up is needed (e.g. if we want to restore hardcoded presets if they were overridden),
+            // we might need a reload, but for now this is sufficient for custom favorites.
+        }
+    } else {
+        alert('Bu öğe varsayılan bir besin ve silinemez. Sadece kendi eklediklerinizi silebilirsiniz.');
+    }
+}
+
+function updateTable(selectedDate) {
+    const tbody = document.getElementById('food-table-body');
+    tbody.innerHTML = '';
+
+    let totalCal = 0, totalProtein = 0, totalCarb = 0, totalFat = 0;
+
+    allData[selectedDate].foodData.forEach((food, index) => {
+        const cal = food.cal * food.multiplier;
+        const protein = food.protein * food.multiplier;
+        const carb = food.carb * food.multiplier;
+        const fat = food.fat * food.multiplier;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td data-label="Besin">${food.name}</td>
+            <td data-label="Kalori">${cal}</td>
+            <td data-label="Protein">${protein.toFixed(1)}</td>
+            <td data-label="Karbonhidrat">${carb.toFixed(1)}</td>
+            <td data-label="Yağ">${fat.toFixed(1)}</td>
+            <td data-label="Porsiyon">
+                <input type="number" min="1" value="${food.multiplier}" 
+                    onchange="updateMultiplier(${index}, this.value)">
+            </td>
+            <td data-label="İşlem"><button onclick="removeFood(${index})">Sil</button></td>
+        `;
+        tbody.appendChild(row);
+
+        totalCal += cal;
+        totalProtein += protein;
+        totalCarb += carb;
+        totalFat += fat;
+    });
+
+    const water = allData[selectedDate].water || 0;
+    document.getElementById('water-count').textContent = water.toFixed(1);
+
+    animateProgressBar();
+
+
+    // Update Totals (Top Row)
+    document.getElementById('tot-cal').textContent = Math.round(totalCal) + ' kcal';
+    document.getElementById('tot-pro').textContent = totalProtein.toFixed(1) + ' g';
+    document.getElementById('tot-carb').textContent = totalCarb.toFixed(1) + ' g';
+    document.getElementById('tot-fat').textContent = totalFat.toFixed(1) + ' g';
+
+    // Update Remaining (Bottom Row)
+    document.getElementById('rem-cal').textContent = Math.round(target.cal - totalCal) + ' kcal';
+    document.getElementById('rem-pro').textContent = (target.protein - totalProtein).toFixed(1) + ' g';
+    document.getElementById('rem-carb').textContent = (target.carb - totalCarb).toFixed(1) + ' g';
+    document.getElementById('rem-fat').textContent = (target.fat - totalFat).toFixed(1) + ' g';
+
+    updateChart(totalProtein, totalCarb, totalFat);
+}
+
+function updateChart(p, c, f) {
+    const total = p + c + f;
+
+    if (total === 0) {
+        document.getElementById('circle-protein').style.strokeDasharray = "0, 100";
+        document.getElementById('circle-carb').style.strokeDasharray = "0, 100";
+        document.getElementById('circle-fat').style.strokeDasharray = "0, 100";
+        return;
+    }
+
+    const pPct = (p / total) * 100;
+    const cPct = (c / total) * 100;
+    const fPct = (f / total) * 100;
+
+    const circleP = document.getElementById('circle-protein');
+    const circleC = document.getElementById('circle-carb');
+    const circleF = document.getElementById('circle-fat');
+
+    circleP.style.strokeDasharray = `${pPct}, 100`;
+
+    circleC.style.strokeDasharray = `${cPct}, 100`;
+    circleC.style.strokeDashoffset = `-${pPct}`;
+
+    circleF.style.strokeDasharray = `${fPct}, 100`;
+    circleF.style.strokeDashoffset = `-${pPct + cPct}`;
+}
+
+function updateMultiplier(index, value) {
+    const multiplier = parseFloat(value);
+    if (multiplier < 1 || isNaN(multiplier)) return;
+    allData[currentDate].foodData[index].multiplier = multiplier;
+    saveData();
+    updateTable(currentDate);
+}
+
+function removeFood(index) {
+    allData[currentDate].foodData.splice(index, 1);
+    saveData();
+    updateTable(currentDate);
+}
+
+function updateWater() {
+    allData[currentDate].water = (allData[currentDate].water || 0) + 0.5;
+    saveData();
+    updateTable(currentDate);
+}
+
+function removeWater() {
+    allData[currentDate].water = Math.max(0, (allData[currentDate].water || 0) - 0.5);
+    saveData();
+    updateTable(currentDate);
+}
+function animateProgressBar() {
+    const water = allData[currentDate].water || 0;
+    const percent = Math.min((water / target.water) * 100, 100);
+    const bar = document.getElementById('water-progress');
+    if (bar) {
+        bar.style.width = percent + '%';
+    }
+}
+
+
+function saveData() {
+    localStorage.setItem('dailyData', JSON.stringify(allData));
+}
+
+
+/* AI Modal Logic */
+function openAIModal() {
+    const modal = document.getElementById('ai-modal');
+    modal.style.display = 'flex';
+    document.getElementById('ai-prompt').focus();
+
+    // Check for API Key
+    const apiKey = localStorage.getItem('geminiApiKey');
+    if (!apiKey) {
+        document.getElementById('api-key-section').style.display = 'block';
+    } else {
+        document.getElementById('api-key-section').style.display = 'none';
+    }
+}
+
+function closeAIModal() {
+    document.getElementById('ai-modal').style.display = 'none';
+    document.getElementById('ai-result').style.display = 'none';
+    document.getElementById('ai-prompt').value = '';
+}
+
+async function analyzeFood() {
+    const promptText = document.getElementById('ai-prompt').value.trim();
+    let apiKey = localStorage.getItem('geminiApiKey');
+    const apiKeyInput = document.getElementById('api-key-input').value.trim();
+
+    if (!apiKey) {
+        if (apiKeyInput) {
+            apiKey = apiKeyInput;
+            localStorage.setItem('geminiApiKey', apiKey);
+        } else {
+            alert('Lütfen Gemini API anahtarınızı girin.');
             return;
         }
-
-        addFoodEntry({ name, cal, protein, carb, fat, multiplier });
-        clearInputs();
     }
 
-    function addPresetFood(name) {
-        if (!PRESET_FOODS[name]) return;
-        const food = PRESET_FOODS[name];
-        addFoodEntry({
-            name,
-            cal: food.cal,
-            protein: food.protein,
-            carb: food.carb,
-            fat: food.fat,
-            multiplier: 1
-        });
+    if (!promptText) {
+        alert('Lütfen ne yediğinizi yazın.');
+        return;
     }
 
-    function addFoodEntry(foodItem) {
-        allData[currentDate].foodData.push(foodItem);
-        saveData();
-        updateUI();
+    // Show loading
+    document.getElementById('ai-loading').style.display = 'block';
+    document.getElementById('analyze-btn').disabled = true;
+    document.getElementById('ai-result').style.display = 'none';
+
+    // Construct the prompt using Gemini format
+    const systemPrompt = `
+    Sen bir beslenme uzmanısın. Kullanıcının yazdığı yemeği analiz et ve aşağıdaki JSON formatında tek bir nesne döndür. 
+    Sadece JSON döndür, başka açıklama yapma.
+    Format:
+    {
+        "name": "Yemek Adı (Kısa ve öz)",
+        "cal": toplam_kalori (sayı),
+        "protein": toplam_protein_gram (sayı),
+        "carb": toplam_karbonhidrat_gram (sayı),
+        "fat": toplam_yag_gram (sayı)
     }
+    
+    Kullanıcı girdisi: "${promptText}"
+    `;
 
-    function removeFood(index) {
-        if (confirm('Bu besini silmek istediğinize emin misiniz?')) {
-            allData[currentDate].foodData.splice(index, 1);
-            saveData();
-            updateUI();
-        }
-    }
+    // Use confirmed working model
+    const selectedModel = 'gemini-flash-lite-latest';
 
-    // Expose removeFood to global scope for inline onclick (or better, use event delegation on table)
-    // Using delegation on table body:
-    elements.tableBody.addEventListener('click', (e) => {
-        if (e.target.closest('.delete-btn')) {
-            const index = e.target.closest('.delete-btn').dataset.index;
-            removeFood(index);
-        }
-    });
-
-    // Delegate change event for multiplier inputs
-    elements.tableBody.addEventListener('change', (e) => {
-        if (e.target.classList.contains('multiplier-input')) {
-            const index = e.target.dataset.index;
-            const newVal = parseFloat(e.target.value);
-            if (newVal > 0) {
-                updateMultiplier(index, newVal);
-            }
-        }
-    });
-
-    function updateMultiplier(index, value) {
-        allData[currentDate].foodData[index].multiplier = value;
-        saveData();
-        updateUI();
-    }
-
-    function updateWater(amount) {
-        const currentWater = allData[currentDate].water || 0;
-        const newWater = Math.max(0, currentWater + amount);
-        allData[currentDate].water = newWater;
-        saveData();
-        updateUI();
-    }
-
-    function saveData() {
-        localStorage.setItem('dailyData', JSON.stringify(allData));
-    }
-
-    function updateUI() {
-        renderTable();
-        updateSummaries();
-        updateWaterProgress();
-    }
-
-    function renderTable() {
-        elements.tableBody.innerHTML = '';
-        const data = allData[currentDate].foodData;
-
-        data.forEach((food, index) => {
-            const totalCal = Math.round(food.cal * food.multiplier);
-            const totalProtein = (food.protein * food.multiplier).toFixed(1);
-            const totalCarb = (food.carb * food.multiplier).toFixed(1);
-            const totalFat = (food.fat * food.multiplier).toFixed(1);
-
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td data-label="Besin">${food.name}</td>
-                <td data-label="Kalori">${totalCal}</td>
-                <td data-label="Protein">${totalProtein}</td>
-                <td data-label="Karb.">${totalCarb}</td>
-                <td data-label="Yağ">${totalFat}</td>
-                <td data-label="Porsiyon">
-                    <input type="number" step="0.1" min="0.1" value="${food.multiplier}" 
-                        class="multiplier-input" data-index="${index}">
-                </td>
-                <td data-label="İşlem">
-                    <button class="delete-btn" data-index="${index}" style="background-color: #dc3545; padding: 5px 10px;">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            `;
-            elements.tableBody.appendChild(row);
-        });
-    }
-
-    function updateSummaries() {
-        let totalCal = 0, totalProtein = 0, totalCarb = 0, totalFat = 0;
-
-        allData[currentDate].foodData.forEach(food => {
-            totalCal += food.cal * food.multiplier;
-            totalProtein += food.protein * food.multiplier;
-            totalCarb += food.carb * food.multiplier;
-            totalFat += food.fat * food.multiplier;
-        });
-
-        const water = allData[currentDate].water || 0;
-
-        elements.totals.innerHTML = `
-            <span style="color: var(--primary-color);">Toplam:</span> 
-            ${Math.round(totalCal)} kcal | 
-            P: ${totalProtein.toFixed(1)}g | 
-            K: ${totalCarb.toFixed(1)}g | 
-            Y: ${totalFat.toFixed(1)}g
-        `;
-
-        elements.remaining.innerHTML = `
-            <span style="color: var(--accent-color);">Kalan:</span> 
-            ${Math.round(TARGETS.cal - totalCal)} kcal | 
-            P: ${(TARGETS.protein - totalProtein).toFixed(1)}g | 
-            K: ${(TARGETS.carb - totalCarb).toFixed(1)}g | 
-            Y: ${(TARGETS.fat - totalFat).toFixed(1)}g
-        `;
-
-        elements.waterTotal.innerHTML = `Su: ${water.toFixed(1)} L / ${TARGETS.water} L`;
-    }
-
-    function updateWaterProgress() {
-        const water = allData[currentDate].water || 0;
-        const percent = Math.min((water / TARGETS.water) * 100, 100);
-        elements.waterProgress.style.width = `${percent}%`;
-    }
-
-    function toggleRecipes() {
-        elements.recipesContent.classList.toggle('open');
-        if (elements.recipesContent.classList.contains('open')) {
-            elements.recipesIcon.classList.remove('fa-chevron-down');
-            elements.recipesIcon.classList.add('fa-chevron-up');
-        } else {
-            elements.recipesIcon.classList.remove('fa-chevron-up');
-            elements.recipesIcon.classList.add('fa-chevron-down');
-        }
-    }
-
-    function clearInputs() {
-        elements.foodName.value = '';
-        elements.foodCal.value = '';
-        elements.foodProtein.value = '';
-        elements.foodCarb.value = '';
-        elements.foodFat.value = '';
-        elements.foodMultiplier.value = '1';
-    }
-
-    // --- AI Feature Logic ---
-    const aiModal = document.getElementById('ai-modal');
-    const scanBtn = document.getElementById('scan-food-btn');
-    const closeBtn = document.querySelector('.close-modal');
-    const apiKeySection = document.getElementById('api-key-section');
-    const imageSection = document.getElementById('image-section');
-    const loadingSection = document.getElementById('loading-section');
-    const apiKeyInput = document.getElementById('api-key-input');
-    const saveApiKeyBtn = document.getElementById('save-api-key-btn');
-    const cameraBtn = document.getElementById('camera-btn');
-    const galleryBtn = document.getElementById('gallery-btn');
-    const fileInput = document.getElementById('file-input');
-    const previewContainer = document.getElementById('preview-container');
-    const imagePreview = document.getElementById('image-preview');
-    const analyzeBtn = document.getElementById('analyze-btn');
-
-    let currentBase64Image = null;
-
-    // Open Modal
-    scanBtn.addEventListener('click', () => {
-        aiModal.style.display = 'flex';
-        checkApiKey();
-    });
-
-    // Close Modal
-    closeBtn.addEventListener('click', closeModal);
-    window.addEventListener('click', (e) => {
-        if (e.target === aiModal) closeModal();
-    });
-
-    function closeModal() {
-        aiModal.style.display = 'none';
-        resetModal();
-    }
-
-    function checkApiKey() {
-        const apiKey = localStorage.getItem('gemini_api_key');
-        if (!apiKey) {
-            apiKeySection.style.display = 'block';
-            imageSection.style.display = 'none';
-        } else {
-            apiKeySection.style.display = 'none';
-            imageSection.style.display = 'block';
-        }
-        loadingSection.style.display = 'none';
-    }
-
-    saveApiKeyBtn.addEventListener('click', () => {
-        const key = apiKeyInput.value.trim();
-        if (key) {
-            localStorage.setItem('gemini_api_key', key);
-            checkApiKey();
-        } else {
-            alert('Lütfen geçerli bir API anahtarı girin.');
-        }
-    });
-
-    // Image Handling
-    cameraBtn.addEventListener('click', () => fileInput.click()); // Simplify: both trigger file input (mobile handles camera option)
-    galleryBtn.addEventListener('click', () => fileInput.click());
-
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                currentBase64Image = e.target.result.split(',')[1]; // Remove header
-                imagePreview.src = e.target.result;
-                previewContainer.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    analyzeBtn.addEventListener('click', async () => {
-        if (!currentBase64Image) return;
-
-        imageSection.style.display = 'none';
-        loadingSection.style.display = 'block';
-
-        const apiKey = localStorage.getItem('gemini_api_key');
-
-        try {
-            const result = await analyzeImageWithGemini(apiKey, currentBase64Image);
-            if (result) {
-                populateForm(result);
-                closeModal();
-            }
-        } catch (error) {
-            alert('Hata: ' + error.message);
-            loadingSection.style.display = 'none';
-            imageSection.style.display = 'block';
-        }
-    });
-
-    async function analyzeImageWithGemini(apiKey, base64Image) {
-        // Denenecek modellerin listesi (Öncelik sırasına göre)
-        const KNOWN_MODELS = [
-            'gemini-1.5-flash-001',      // En güncel ve hızlı
-            'gemini-1.5-flash',          // Alias
-            'gemini-1.5-pro-001',        // Pro versiyon
-            'gemini-1.5-pro',            // Pro Alias
-            'gemini-pro-vision',         // Eski görsel modeli
-        ];
-
-        let lastError = null;
-
-        loadingSection.innerHTML = '<div class="spinner"></div><p>Uygun AI modeli ile deneniyor...</p>';
-
-        for (const modelName of KNOWN_MODELS) {
-            try {
-                // console.log(`Model deneniyor: ${modelName}`); // Debug için
-                const result = await attemptAnalysis(apiKey, base64Image, modelName);
-                if (result) return result;
-            } catch (error) {
-                console.warn(`Model başarısız (${modelName}):`, error.message);
-                lastError = error;
-                // Bir sonraki modele geç
-            }
-        }
-
-        // Hiçbiri çalışmazsa
-        throw new Error('Hiçbir yapay zeka modeli ile sonuç alınamadı. Lütfen API anahtarınızı kontrol edin veya daha sonra deneyin.\nSon Hata: ' + (lastError?.message || 'Bilinmiyor'));
-    }
-
-    async function attemptAnalysis(apiKey, base64Image, modelName) {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-
-        const prompt = `
-            Analyze this food image. Identify the main food item and estimate its nutritional values for the visible portion.
-            Return ONLY a JSON object (no markdown, no extra text) with these keys:
-            - name (string, in Turkish)
-            - cal (number, total calories)
-            - protein (number, grams)
-            - carb (number, grams)
-            - fat (number, grams)
-            
-            Example: {"name": "Izgara Tavuk", "cal": 250, "protein": 30, "carb": 5, "fat": 10}
-        `;
-
-        const response = await fetch(url, {
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
                 contents: [{
-                    parts: [
-                        { text: prompt },
-                        { inline_data: { mime_type: "image/jpeg", data: base64Image } }
-                    ]
+                    parts: [{ text: systemPrompt }]
                 }]
             })
         });
 
-        if (!response.ok) {
-            const errData = await response.json().catch(() => ({}));
-            // 404 (Model yok) veya 400 (Desteklenmiyor) ise hata fırlat ki döngü devam etsin
-            throw new Error(errData.error?.message || `API Hatası: ${response.status}`);
-        }
-
         const data = await response.json();
 
-        if (!data.candidates || data.candidates.length === 0) {
-            throw new Error('Model boş sonuç döndürdü.');
+        if (data.error) {
+            throw new Error(data.error.message);
         }
 
-        const text = data.candidates[0].content.parts[0].text;
-        const jsonStr = text.replace(/```json|```/g, '').trim();
-        return JSON.parse(jsonStr);
+        let textResponse = data.candidates[0].content.parts[0].text;
+        // Clean markdown code blocks if present
+        textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+        const result = JSON.parse(textResponse);
+
+        // Fill inputs
+        document.getElementById('ai-food-name').value = result.name;
+        document.getElementById('ai-food-cal').value = result.cal;
+        document.getElementById('ai-food-protein').value = result.protein;
+        document.getElementById('ai-food-carb').value = result.carb;
+        document.getElementById('ai-food-fat').value = result.fat;
+
+        // Show result
+        document.getElementById('ai-result').style.display = 'block';
+
+    } catch (error) {
+        console.error('AI Error:', error);
+
+        let errorMessage = 'Analiz sırasında bir hata oluştu: ' + error.message;
+
+        // Try to list models if generateContent failed
+        if (error.message.includes('not found') || error.message.includes('not supported')) {
+            try {
+                const listResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+                const listData = await listResponse.json();
+
+                if (listData.models) {
+                    const validModels = listData.models
+                        .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+                        .map(m => m.name.replace('models/', ''))
+                        .join('\n');
+
+                    errorMessage += `\n\nKullanılabilir Modeller:\n${validModels}\n\nLütfen API anahtarınızın bu modellerden birini desteklediğinden emin olun.`;
+                }
+            } catch (listError) {
+                console.error('List Models Error:', listError);
+                errorMessage += '\n(Model listesi de alınamadı.)';
+            }
+        }
+
+        alert(errorMessage);
+
+        // If error is related to key, clear it
+        if (error.message.includes('API key') || error.message.includes('UNAUTHENTICATED')) {
+            localStorage.removeItem('geminiApiKey');
+            document.getElementById('api-key-section').style.display = 'block';
+        }
+    } finally {
+        document.getElementById('ai-loading').style.display = 'none';
+        document.getElementById('analyze-btn').disabled = false;
+    }
+}
+
+function confirmAIResult() {
+    const name = document.getElementById('ai-food-name').value;
+    const cal = parseFloat(document.getElementById('ai-food-cal').value);
+    const protein = parseFloat(document.getElementById('ai-food-protein').value);
+    const carb = parseFloat(document.getElementById('ai-food-carb').value);
+    const fat = parseFloat(document.getElementById('ai-food-fat').value);
+    const saveFavorite = document.getElementById('ai-save-favorite').checked;
+
+    if (!name || isNaN(cal)) {
+        alert('Lütfen değerleri kontrol edin.');
+        return;
     }
 
-    function populateForm(data) {
-        elements.foodName.value = data.name || '';
-        elements.foodCal.value = data.cal || '';
-        elements.foodProtein.value = data.protein || '';
-        elements.foodCarb.value = data.carb || '';
-        elements.foodFat.value = data.fat || '';
-        elements.foodMultiplier.value = '1';
+    // Add to daily log
+    allData[currentDate].foodData.push({ name, cal, protein, carb, fat, multiplier: 1 });
+    saveData();
+    updateTable(currentDate);
+
+    // Save to favorites if checked
+    if (saveFavorite) {
+        const customFavorites = JSON.parse(localStorage.getItem('customFavorites')) || {};
+        if (!customFavorites[name] && !presetFoods[name]) {
+            customFavorites[name] = { cal, protein, carb, fat, category: 'custom' };
+            localStorage.setItem('customFavorites', JSON.stringify(customFavorites));
+
+            // Update memory and UI
+            presetFoods[name] = { cal, protein, carb, fat, category: 'custom' };
+            renderQuickButtons();
+        }
     }
 
-    function resetModal() {
-        fileInput.value = '';
-        currentBase64Image = null;
-        previewContainer.style.display = 'none';
-        imagePreview.src = '';
+    closeAIModal();
+    alert('Besin eklendi!');
+}
+
+// Close modal on outside click
+// Settings Modal Functions
+function openSettingsModal() {
+    document.getElementById('target-cal').value = target.cal;
+    document.getElementById('target-pro').value = target.protein;
+    document.getElementById('target-carb').value = target.carb;
+    document.getElementById('target-fat').value = target.fat;
+    document.getElementById('settings-modal').style.display = 'block';
+}
+
+function closeSettingsModal() {
+    document.getElementById('settings-modal').style.display = 'none';
+}
+
+function saveTargetSettings() {
+    const newCal = parseInt(document.getElementById('target-cal').value);
+    const newPro = parseFloat(document.getElementById('target-pro').value);
+    const newCarb = parseFloat(document.getElementById('target-carb').value);
+    const newFat = parseFloat(document.getElementById('target-fat').value);
+
+    target = {
+        ...target,
+        cal: newCal,
+        protein: newPro,
+        carb: newCarb,
+        fat: newFat
+    };
+
+    localStorage.setItem('userSettings', JSON.stringify(target));
+    updateTable(currentDate);
+    closeSettingsModal();
+}
+
+window.onclick = function (event) {
+    const aiModal = document.getElementById('ai-modal');
+    const settingsModal = document.getElementById('settings-modal');
+    if (event.target == aiModal) {
+        closeAIModal();
+    } else if (event.target == settingsModal) {
+        closeSettingsModal();
     }
-});
+}
+
+/* Recipe Section Logic */
+function toggleRecipe(btn) {
+    const recipeCard = btn.closest('.recipe');
+    recipeCard.classList.toggle('active');
+
+    // Toggle the chevron icon
+    const icon = btn.querySelector('.fa-chevron-right, .fa-chevron-down');
+    if (recipeCard.classList.contains('active')) {
+        icon.classList.replace('fa-chevron-right', 'fa-chevron-down');
+    } else {
+        icon.classList.replace('fa-chevron-down', 'fa-chevron-right');
+    }
+}
+
+// Global Recipes Header Toggle
+const recipesHeader = document.getElementById('recipes-header');
+if (recipesHeader) {
+    recipesHeader.addEventListener('click', function () {
+        const content = document.getElementById('recipes-content');
+        const icon = this.querySelector('i');
+
+        if (content.style.display === 'none' || content.style.display === '') {
+            content.style.display = 'block';
+            if (icon) icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+        } else {
+            content.style.display = 'none';
+            if (icon) icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+        }
+    });
+}
+
+// Initial Render
+
+

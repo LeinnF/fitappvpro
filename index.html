@@ -3,172 +3,269 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>Fitness Tracker</title>
-    <meta name="description" content="Günlük besin, kalori ve su takibi uygulaması.">
-
-    <!-- Icons and Manifest -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="w.jpg" type="image/jpg">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="w.jpg">
-
-    <!-- Styles -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-    <!-- PWA Settings -->
-    <meta name="theme-color" content="#1e3a5f">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366F1">
+    <link rel="apple-touch-icon" href="ikonlar/icon-192.png" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 
 <body>
 
-    <main>
-        <!-- Add Food Section -->
-        <section id="input-section">
-            <h2><i class="fas fa-plus-circle"></i> Besin Girişi</h2>
-            <div class="input-group">
-                <input type="text" id="food-name" placeholder="Besin Adı" aria-label="Besin Adı">
-                <input type="number" id="food-cal" placeholder="Kalori" aria-label="Kalori">
-                <input type="number" id="food-protein" placeholder="Protein (g)" aria-label="Protein">
-                <input type="number" id="food-carb" placeholder="Karbonhidrat (g)" aria-label="Karbonhidrat">
-                <input type="number" id="food-fat" placeholder="Yağ (g)" aria-label="Yağ">
-                <input type="number" id="food-multiplier" placeholder="Porsiyon" value="1" min="0.1" step="0.1"
-                    aria-label="Porsiyon">
-            </div>
-            <div style="text-align: center; margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
-                <button id="add-food-btn"><i class="fas fa-plus"></i> Ekle</button>
-                <button id="scan-food-btn" style="background-color: var(--accent-color);"><i class="fas fa-camera"></i>
-                    Fotoğraf Çek</button>
-            </div>
-        </section>
+    <header class="main-header">
+        <div class="logo">
+            <i class="fas fa-heartbeat"></i>
+            <span>FitApp Pro</span>
+        </div>
+    </header>
 
-        <!-- AI Scan Modal -->
+    <main class="dashboard-grid">
+        <div class="left-column">
+            <section id="input-section">
+                <h2><i class="fas fa-edit"></i> Besin Girişi</h2>
+                <div class="input-group">
+                    <input type="text" id="food-name" placeholder="Besin Adı">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="food-cal" placeholder="Kalori" style="flex: 1;">
+                        <!-- Custom Dropdown -->
+                        <div class="custom-dropdown" id="custom-category-dropdown">
+                            <div class="dropdown-selected" onclick="toggleDropdown()">Kahvaltı</div>
+                            <div class="dropdown-options">
+                                <div class="dropdown-option selected" onclick="selectOption('breakfast', 'Kahvaltı')">
+                                    Kahvaltı</div>
+                                <div class="dropdown-option" onclick="selectOption('main', 'Ana Yemek')">Ana Yemek</div>
+                                <div class="dropdown-option" onclick="selectOption('supplements', 'Supplement/İçecek')">
+                                    Supplement/İçecek</div>
+                                <div class="dropdown-option" onclick="selectOption('custom', 'Diğer')">Diğer</div>
+                            </div>
+                        </div>
+                        <!-- Hidden Native Select for compatibility -->
+                        <select id="food-category-input" style="display:none;">
+                            <option value="breakfast">Kahvaltı</option>
+                            <option value="main">Ana Yemek</option>
+                            <option value="supplements">Supplement/İçecek</option>
+                            <option value="custom">Diğer</option>
+                        </select>
+                    </div>
+                    <input type="number" id="food-protein" placeholder="Protein (g)">
+                    <input type="number" id="food-carb" placeholder="Karbonhidrat (g)">
+                    <input type="number" id="food-fat" placeholder="Yağ (g)">
+                    <input type="number" id="food-multiplier" placeholder="Porsiyon" value="1" min="1">
+                </div>
+                <div class="action-buttons">
+                    <button onclick="addFood()" class="primary-btn"><i class="fas fa-plus"></i> Ekle</button>
+                    <button onclick="addToFavorites()" class="secondary-btn"><i class="fas fa-star"></i> Favoriye
+                        Ekle</button>
+                </div>
+                <!-- AI Button -->
+                <button onclick="openAIModal()" class="ai-btn full-width-btn" style="margin-top: 10px;"><i
+                        class="fas fa-magic"></i> AI ile Ekle</button>
+            </section>
+
+            <section id="water-section">
+                <h2><i class="fas fa-glass-whiskey"></i> Günlük Su Takibi</h2>
+                <div class="water-controls">
+                    <div class="water-display">
+                        <div class="water-amount" id="water-count">0</div>
+                        <div class="water-target">0.5L birimlerle</div>
+                    </div>
+                    <div class="water-buttons">
+                        <button onclick="updateWater()"><i class="fas fa-plus"></i></button>
+                        <button onclick="removeWater()"><i class="fas fa-minus"></i></button>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div id="water-progress" class="progress"></div>
+                </div>
+            </section>
+        </div>
+
+        <div class="right-column">
+            <section id="quick-food-section">
+                <h2>
+                    Hızlı Ekle
+                    <button id="delete-mode-btn" onclick="toggleDeleteMode()" title="Silme Modu">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </h2>
+
+                <!-- Category Menu -->
+                <div class="category-menu">
+                    <button class="cat-btn" onclick="filterCategory('breakfast')">Kahvaltı</button>
+                    <button class="cat-btn" onclick="filterCategory('main')">Ana Yemek</button>
+                    <button class="cat-btn" onclick="filterCategory('supplements')">Supplement/İçecek</button>
+                    <button class="cat-btn" onclick="filterCategory('favorites')">Favorilerim</button>
+                </div>
+
+                <div class="quick-food-grid">
+                    <!-- Buttons will be rendered by JS -->
+                </div>
+            </section>
+
+            <section id="summary-section">
+                <div class="summary-header">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <h2><i class="fas fa-chart-pie"></i> Günlük Özet</h2>
+                        <button onclick="openSettingsModal()" class="icon-btn" title="Hedefleri Düzenle"
+                            style="margin-bottom: 20px; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; padding: 0;">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                    <div class="date-navigation">
+                        <button onclick="changeDateBy(-1)" class="nav-btn"><i class="fas fa-chevron-left"></i></button>
+                        <input type="date" id="date-picker" onchange="changeDate()">
+                        <button onclick="changeDateBy(1)" class="nav-btn"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+
+                <div class="chart-wrapper">
+                    <div class="chart-container">
+                        <svg id="macro-chart" viewBox="0 0 36 36" class="circular-chart">
+                            <path class="circle-bg"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path id="circle-protein" class="circle" stroke-dasharray="0, 100"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path id="circle-carb" class="circle" stroke-dasharray="0, 100"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path id="circle-fat" class="circle" stroke-dasharray="0, 100"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <text x="18" y="20.35" class="percentage">Makrolar</text>
+                        </svg>
+                    </div>
+                    <div class="stats-text">
+                        <div class="macro-summary-grid">
+                            <div class="grid-header"></div>
+                            <div class="grid-header">Kalori</div>
+                            <div class="grid-header">Protein</div>
+                            <div class="grid-header">Karb</div>
+                            <div class="grid-header">Yağ</div>
+                            <div class="grid-separator"></div>
+                            <div class="row-label">Kalan</div>
+                            <div id="rem-cal" class="val-box">0</div>
+                            <div id="rem-pro" class="val-box">0</div>
+                            <div id="rem-carb" class="val-box">0</div>
+                            <div id="rem-fat" class="val-box">0</div>
+                            <div class="row-label">Toplam</div>
+                            <div id="tot-cal" class="val-box">0</div>
+                            <div id="tot-pro" class="val-box">0</div>
+                            <div id="tot-carb" class="val-box">0</div>
+                            <div id="tot-fat" class="val-box">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Besin</th>
+                                <th>Kalori</th>
+                                <th>Protein</th>
+                                <th>Karb</th>
+                                <th>Yağ</th>
+                                <th>Porsiyon</th>
+                                <th>Sil</th>
+                            </tr>
+                        </thead>
+                        <tbody id="food-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- Modals outside columns -->
         <div id="ai-modal" class="modal">
             <div class="modal-content">
-                <span class="close-modal">&times;</span>
-                <h3 id="modal-title">Besin Analizcisi 🤖</h3>
+                <span class="close-modal" onclick="closeAIModal()"><i class="fas fa-times"></i></span>
+                <h2>AI Asistan</h2>
+                <p>Yediğiniz yemeği detaylıca anlatın, biz hesaplayalım.</p>
 
-                <!-- Step 1: API Key Input -->
-                <div id="api-key-section" style="display: none;">
-                    <p>Yapay zeka özelliğini kullanmak için ücretsiz bir <strong>Google Gemini API Anahtarı</strong>
-                        gereklidir.</p>
-                    <input type="password" id="api-key-input" placeholder="API Anahtarınızı yapıştırın"
-                        style="width: 100%; box-sizing: border-box;">
-                    <p style="font-size: 0.8rem; color: #666;">Anahtarınız sadece tarayıcınızda saklanır.</p>
-                    <button id="save-api-key-btn" style="width: 100%;">Kaydet ve Devam Et</button>
-                    <p style="font-size: 0.8rem; margin-top: 10px;"><a href="https://aistudio.google.com/app/apikey"
-                            target="_blank">Anahtar Almak İçin Tıklayın</a></p>
+                <textarea id="ai-prompt" placeholder="Örn: 1 tabak bol soslu makarna ve 1 bardak kola..."></textarea>
+
+                <div id="api-key-section" style="display:none; margin-top:10px;">
+                    <input type="password" id="api-key-input" placeholder="Gemini API Anahtarınızı girin">
+                    <small style="display:block; color:#718096; margin-top:5px;">Anahtarınız sadece tarayıcınızda
+                        saklanır.</small>
                 </div>
 
-                <!-- Step 2: Image Selection -->
-                <div id="image-section">
-                    <div class="file-upload-wrapper">
-                        <button id="camera-btn" style="width: 100%; margin-bottom: 10px;"><i class="fas fa-camera"></i>
-                            Fotoğraf Çek</button>
-                        <input type="file" id="file-input" accept="image/*" style="display: none;">
-                        <button id="gallery-btn" style="width: 100%; background-color: var(--secondary-color);"><i
-                                class="fas fa-image"></i> Galeriden Seç</button>
-                    </div>
-                    <div id="preview-container" style="display: none; margin-top: 15px; text-align: center;">
-                        <img id="image-preview" src="" alt="Preview"
-                            style="max-width: 100%; max-height: 300px; border-radius: 10px;">
-                        <button id="analyze-btn" style="width: 100%; margin-top: 10px; background-color: #28a745;">🔍
-                            Analiz Et</button>
-                    </div>
+                <div class="modal-actions">
+                    <button onclick="analyzeFood()" class="primary-btn" id="analyze-btn">Hesapla</button>
                 </div>
 
-                <!-- Step 3: Loading & Result -->
-                <div id="loading-section" style="display: none; text-align: center;">
+                <div id="ai-loading" style="display:none; text-align:center; margin-top:25px;">
                     <div class="spinner"></div>
-                    <p>Yapay zeka besini inceliyor...</p>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-weight: 500;">Analiz ediliyor...</p>
+                </div>
+
+                <div id="ai-result"
+                    style="display:none; margin-top:20px; border-top:1px solid #e2e8f0; padding-top:15px;">
+                    <h3>Sonuçlar</h3>
+                    <div class="input-group">
+                        <input type="text" id="ai-food-name" placeholder="Yemek Adı">
+                        <input type="number" id="ai-food-cal" placeholder="Kalori">
+                        <input type="number" id="ai-food-protein" placeholder="Protein">
+                        <input type="number" id="ai-food-carb" placeholder="Karbonhidrat">
+                        <input type="number" id="ai-food-fat" placeholder="Yağ">
+                    </div>
+                    <div style="margin-top:10px;">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="checkbox" id="ai-save-favorite"> Favorilere de ekle
+                        </label>
+                    </div>
+                    <button onclick="confirmAIResult()" class="full-width-btn success-btn">Onayla ve Ekle</button>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Foods Section -->
-        <section id="quick-food-section">
-            <h2><i class="fas fa-bolt"></i> Hazır Besinler</h2>
-            <div class="quick-food-grid" id="quick-food-container">
-                <!-- Buttons will be generated by JS -->
-            </div>
-        </section>
-
-        <!-- Summary Section -->
-        <section id="summary-section">
-            <h2><i class="fas fa-chart-pie"></i> Günlük Özet</h2>
-            <div style="text-align: center; margin-bottom: 15px;">
-                <input type="date" id="date-picker" aria-label="Tarih Seç">
-            </div>
-
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Besin</th>
-                            <th>Kalori</th>
-                            <th>Protein</th>
-                            <th>Karb.</th>
-                            <th>Yağ</th>
-                            <th>Porsiyon</th>
-                            <th>İşlem</th>
-                        </tr>
-                    </thead>
-                    <tbody id="food-table-body">
-                        <!-- Rows will be generated by JS -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="summary-totals">
-                <p id="totals"></p>
-                <p id="remaining"></p>
-                <p id="water-total"></p>
-            </div>
-        </section>
-
-        <!-- Water Section -->
-        <section id="water-section">
-            <h2><i class="fas fa-glass-water"></i> Su Takibi (0.5L)</h2>
-            <div class="water-container">
-                <div class="water-buttons">
-                    <button id="add-water-btn"><i class="fas fa-plus"></i> Ekle</button>
-                    <button id="remove-water-btn"><i class="fas fa-minus"></i> Çıkar</button>
+        <div id="recipe-popup" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-utensils"></i> <span id="recipe-title">Tarif</span></h2>
+                    <span class="close-modal" onclick="closeRecipePopup()"><i class="fas fa-times"></i></span>
                 </div>
-                <div class="progress-bar-container">
-                    <div id="water-progress" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"
-                        aria-valuemax="100"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Recipes Section -->
-        <section id="recipes-section">
-            <h2 id="recipes-header">
-                <i class="fas fa-book-open"></i> Tarifler <i class="fas fa-chevron-down" id="recipes-icon"></i>
-            </h2>
-            <div id="recipes-content">
-                <div class="recipe">
-                    <button class="recipe-toggle">Pankek Tarifi <i class="fas fa-chevron-right"></i></button>
-                    <div class="recipe-content">
-                        <p><strong>Malzemeler:</strong> 2 yumurta, 1 çay bardağı süt, 1.5 su bardağı un, 1 paket
-                            kabartma tozu.</p>
-                        <p><strong>Yapılışı:</strong> Tüm malzemeleri çırpın ve tavada pişirin.</p>
+                <div class="modal-body recipe-popup-body">
+                    <div class="recipe-detail-section">
+                        <h3><i class="fas fa-list-ul"></i> Malzemeler</h3>
+                        <p id="recipe-ingredients"></p>
+                    </div>
+                    <div class="recipe-detail-section" style="margin-top: 20px;">
+                        <h3><i class="fas fa-mitten"></i> Hazırlanışı</h3>
+                        <p id="recipe-instructions"></p>
                     </div>
                 </div>
-
-                <div class="recipe">
-                    <button class="recipe-toggle">Tost Tarifi <i class="fas fa-chevron-right"></i></button>
-                    <div class="recipe-content">
-                        <p><strong>Malzemeler:</strong> 2 dilim ekmek, kaşar peyniri, tereyağı.</p>
-                        <p><strong>Yapılışı:</strong> Ekmeğin arasına peyniri koyun, üzerine yağ sürüp tost makinesinde
-                            basınız.</p>
-                    </div>
-                </div>
-                <!-- More recipes can be added here -->
             </div>
-        </section>
+        </div>
+
+        <div id="settings-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-cog"></i> Hedef Ayarları</h2>
+                    <span class="close-modal" onclick="closeSettingsModal()"><i class="fas fa-times"></i></span>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group" style="display: flex; flex-direction: column; gap: 5px;">
+                        <label>Günlük Kalori Hedefi</label>
+                        <input type="number" id="target-cal" placeholder="Kalori (kcal)">
+                        <label>Protein Hedefi (g)</label>
+                        <input type="number" id="target-pro" placeholder="Protein (g)">
+                        <label>Karbonhidrat Hedefi (g)</label>
+                        <input type="number" id="target-carb" placeholder="Karb (g)">
+                        <label>Yağ Hedefi (g)</label>
+                        <input type="number" id="target-fat" placeholder="Yağ (g)">
+                    </div>
+                    <button onclick="saveTargetSettings()" class="full-width-btn success-btn"
+                        style="margin-top: 20px;">Hedefleri Kaydet</button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script src="script.js"></script>
