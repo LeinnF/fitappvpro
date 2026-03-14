@@ -92,7 +92,8 @@ main.dashboard-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: 24px;
-    /* Increased gap */
+    width: 100%;
+    overflow: hidden;
 }
 
 .main-header {
@@ -1257,11 +1258,15 @@ textarea#ai-prompt:focus {
     .left-column,
     .right-column {
         gap: 16px;
+        width: 100%;
+        min-width: 0;
+        overflow: hidden;
     }
 
     section {
-        padding: 18px 16px;
-        border-radius: 20px;
+        width: 100%;
+        min-width: 0;
+        overflow: hidden;
     }
 
     section:hover {
