@@ -105,21 +105,9 @@ function syncToFirebase(type, data) {
 if (!allData[today]) allData[today] = { foodData: [], water: 0 };
 
 const presetFoods = {
-    'Pankek': {
-        cal: 1010, protein: 29.8, carb: 39.5, fat: 18, category: 'breakfast',
-        recipe: {
-            ingredients: "1 yumurta, 1 çay bardağı süt, 1.5 çay bardağı un, 1 paket kabartma tozu.",
-            instructions: "Tüm malzemeleri çırpın, yağsız tavada küçük yuvarlaklar halinde pişirin."
-        }
-    },
+    'Pankek': { cal: 1010, protein: 29.8, carb: 39.5, fat: 18, category: 'breakfast' },
     'Yumurta(L)': { cal: 90, protein: 7.5, carb: 0.3, fat: 6.5, category: 'breakfast' },
-    'Tost': {
-        cal: 920, protein: 44.5, carb: 99, fat: 39, category: 'breakfast',
-        recipe: {
-            ingredients: "2 dilim tam buğday ekmeği, 30g kaşar peyniri.",
-            instructions: "Peyniri ekmeklerin arasına koyup tost makinesinde basın."
-        }
-    },
+    'Tost': { cal: 920, protein: 44.5, carb: 99, fat: 39, category: 'breakfast' },
     'Menemen Harcı(350g)': { cal: 180, protein: 5.6, carb: 15, fat: 10, category: 'breakfast' },
     'Kaşar Peynir(Dilim)': { cal: 66, protein: 4.6, carb: 0.4, fat: 5, category: 'breakfast' },
     'Nescafe 3’ü 1 Arada': { cal: 81, protein: 0.51, carb: 15.6, fat: 1.94, category: 'supplements' },
@@ -870,6 +858,7 @@ function openSettingsModal() {
     document.getElementById('target-pro').value = target.protein;
     document.getElementById('target-carb').value = target.carb;
     document.getElementById('target-fat').value = target.fat;
+    document.getElementById('target-water').value = target.water;
     document.getElementById('settings-modal').style.display = 'block';
 }
 
@@ -882,13 +871,15 @@ function saveTargetSettings() {
     const newPro = parseFloat(document.getElementById('target-pro').value);
     const newCarb = parseFloat(document.getElementById('target-carb').value);
     const newFat = parseFloat(document.getElementById('target-fat').value);
+    const newWater = parseFloat(document.getElementById('target-water').value);
 
     target = {
         ...target,
         cal: newCal,
         protein: newPro,
         carb: newCarb,
-        fat: newFat
+        fat: newFat,
+        water: newWater
     };
 
     localStorage.setItem('userSettings', JSON.stringify(target));
