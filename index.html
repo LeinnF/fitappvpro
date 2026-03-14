@@ -16,6 +16,11 @@
     <link rel="apple-touch-icon" href="ikonlar/icon-192.png" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
 </head>
 
 <body>
@@ -24,6 +29,18 @@
         <div class="logo">
             <i class="fas fa-heartbeat"></i>
             <span>FitApp Pro</span>
+        </div>
+        <div id="user-profile" class="user-profile">
+            <button id="login-btn" class="login-btn" onclick="login()">
+                <i class="fab fa-google"></i> Giriş Yap
+            </button>
+            <div id="user-info" class="user-info" style="display: none;">
+                <img id="user-photo" src="" alt="User">
+                <span id="user-name"></span>
+                <button onclick="logout()" class="logout-btn" title="Çıkış Yap">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
         </div>
     </header>
 

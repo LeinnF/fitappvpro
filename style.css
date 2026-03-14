@@ -96,19 +96,98 @@ main.dashboard-grid {
 }
 
 .main-header {
-    background: var(--card-bg);
-    padding: 14px 20px;
-    box-shadow: var(--shadow-sm);
-    border-bottom: 1px solid var(--border-color);
-    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 16px 24px;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    text-align: center;
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    text-align: center;
 }
+
+.user-profile {
+    display: flex;
+    align-items: center;
+}
+
+.login-btn {
+    background: white;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: var(--shadow-sm);
+}
+
+.login-btn:hover {
+    background: #f7fafc;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.login-btn i {
+    color: #4285F4; /* Google Blue */
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#user-photo {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: var(--shadow-sm);
+}
+
+#user-name {
+    display: inline-block;
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.logout-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.logout-btn:hover {
+    color: #EF4444;
+}
+
+/* Hide user name on very small screens */
+@media (max-width: 400px) {
+    #user-name {
+        display: none;
+    }
+}
+
 
 .main-header .logo {
     display: flex;

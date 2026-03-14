@@ -14,6 +14,96 @@ let currentDate = today;
 let isDeleteMode = false;
 let isEditMode = false;
 let currentEditingFood = null;
+let currentUser = null;
+
+// Auth State Listener
+auth.onAuthStateChanged(user => {
+    if (user) {
+        currentUser = user;
+        document.getElementById('login-btn').style.display = 'none';
+        document.getElementById('user-info').style.display = 'flex';
+        document.getElementById('user-photo').src = user.photoURL;
+        document.getElementById('user-name').textContent = user.displayName;
+        
+        // Load data from Firebase
+        loadFromFirebase();
+    } else {
+        currentUser = null;
+        document.getElementById('login-btn').style.display = 'block';
+        document.getElementById('user-info').style.display = 'none';
+        
+        // Load data from localStorage (guest mode)
+        allData = JSON.parse(localStorage.getItem('dailyData')) || {};
+        target = JSON.parse(localStorage.getItem('userSettings')) || defaultSettings;
+        loadFavorites();
+        updateTable(currentDate);
+        renderQuickButtons();
+    }
+});
+
+function login() {
+    auth.signInWithPopup(provider).catch(error => {
+        console.error("Login Error:", error);
+        alert("Giriş yapılamadı: " + error.message);
+    });
+}
+
+function logout() {
+    auth.signOut().then(() => {
+        location.reload(); // Clean state
+    });
+}
+
+function loadFromFirebase() {
+    if (!currentUser) return;
+    
+    // Load Daily Data
+    db.collection('users').doc(currentUser.uid).collection('data').doc('dailyData').get().then(doc => {
+        if (doc.exists) {
+            allData = doc.data();
+            // Handle migration if local is newer (optional, but let's keep it simple for now)
+        } else {
+            // New user or no cloud data, use local
+            allData = JSON.parse(localStorage.getItem('dailyData')) || {};
+        }
+        if (!allData[today]) allData[today] = { foodData: [], water: 0 };
+        updateTable(currentDate);
+    });
+
+    // Load Settings
+    db.collection('users').doc(currentUser.uid).collection('data').doc('userSettings').get().then(doc => {
+        if (doc.exists) {
+            target = doc.data();
+        } else {
+            target = JSON.parse(localStorage.getItem('userSettings')) || defaultSettings;
+        }
+        updateTable(currentDate); // Refresh chart with new targets
+    });
+
+    // Load Favorites
+    db.collection('users').doc(currentUser.uid).collection('data').doc('customFavorites').get().then(doc => {
+        if (doc.exists) {
+            const cloudFavs = doc.data();
+            // Merge with local
+            const localFavs = JSON.parse(localStorage.getItem('customFavorites')) || {};
+            const merged = { ...cloudFavs, ...localFavs };
+            
+            // Update presetFoods with merged data
+            for (const [name, data] of Object.entries(merged)) {
+                presetFoods[name] = data;
+            }
+            renderQuickButtons();
+        } else {
+            loadFavorites();
+        }
+    });
+}
+
+function syncToFirebase(type, data) {
+    if (!currentUser) return;
+    db.collection('users').doc(currentUser.uid).collection('data').doc(type).set(data)
+        .catch(err => console.error("Firebase Sync Error:", err));
+}
 
 if (!allData[today]) allData[today] = { foodData: [], water: 0 };
 
@@ -210,6 +300,9 @@ function addToFavorites() {
     customFavorites[name] = { cal, protein, carb, fat, category: category };
     localStorage.setItem('customFavorites', JSON.stringify(customFavorites));
 
+    // Cloud Sync
+    syncToFirebase('customFavorites', customFavorites);
+
     // Update UI
     renderQuickButtons();
     // Switch to selected category so user sees the new item
@@ -344,14 +437,9 @@ function saveRecipe() {
     
     // Save custom favorites if it's a custom food
     const customFavorites = JSON.parse(localStorage.getItem('customFavorites')) || {};
-    if (customFavorites[currentEditingFood]) {
-        customFavorites[currentEditingFood].recipe = presetFoods[currentEditingFood].recipe;
-        localStorage.setItem('customFavorites', JSON.stringify(customFavorites));
-    } else {
-        // Even if it's a preset food, we should save its recipe override in customFavorites
-        customFavorites[currentEditingFood] = presetFoods[currentEditingFood];
-        localStorage.setItem('customFavorites', JSON.stringify(customFavorites));
-    }
+    customFavorites[currentEditingFood] = presetFoods[currentEditingFood];
+    localStorage.setItem('customFavorites', JSON.stringify(customFavorites));
+    syncToFirebase('customFavorites', customFavorites);
     
     closeEditRecipeModal();
     renderQuickButtons();
@@ -369,6 +457,7 @@ function deleteRecipe() {
         if (customFavorites[currentEditingFood]) {
             delete customFavorites[currentEditingFood].recipe;
             localStorage.setItem('customFavorites', JSON.stringify(customFavorites));
+            syncToFirebase('customFavorites', customFavorites);
         }
     }
     
@@ -448,6 +537,9 @@ function deleteFavorite(name) {
             // Delete from storage
             delete customFavorites[name];
             localStorage.setItem('customFavorites', JSON.stringify(customFavorites));
+            
+            // Cloud Sync
+            syncToFirebase('customFavorites', customFavorites);
 
             // Delete from memory
             if (presetFoods[name]) {
@@ -455,16 +547,7 @@ function deleteFavorite(name) {
             }
 
             // Remove from UI
-            const buttons = document.querySelectorAll('.quick-food-grid button');
-            buttons.forEach(btn => {
-                // Removing icon HTML to check text content safely
-                if (btn.textContent.trim() === name) {
-                    btn.remove();
-                }
-            });
-
-            // If clean up is needed (e.g. if we want to restore hardcoded presets if they were overridden),
-            // we might need a reload, but for now this is sufficient for custom favorites.
+            renderQuickButtons();
         }
     } else {
         alert('Bu öğe varsayılan bir besin ve silinemez. Sadece kendi eklediklerinizi silebilirsiniz.');
@@ -589,6 +672,7 @@ function animateProgressBar() {
 
 function saveData() {
     localStorage.setItem('dailyData', JSON.stringify(allData));
+    syncToFirebase('dailyData', allData);
 }
 
 
@@ -793,6 +877,7 @@ function saveTargetSettings() {
     };
 
     localStorage.setItem('userSettings', JSON.stringify(target));
+    syncToFirebase('userSettings', target);
     updateTable(currentDate);
     closeSettingsModal();
 }
