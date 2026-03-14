@@ -1413,18 +1413,40 @@ textarea#ai-prompt:focus {
     .table-container {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        margin: 0 -4px; /* Slight overflow correction */
     }
 
     table {
-        min-width: 560px; /* enough for all columns to show */
-        font-size: 0.78rem;
-        table-layout: auto;
+        min-width: 100%;
         width: 100%;
+        font-size: 11px; /* Smaller font for mobile fit */
+        table-layout: auto;
+        border-collapse: collapse;
     }
 
     th, td {
-        padding: 10px 8px;
-        white-space: nowrap;
+        padding: 8px 4px;
+        white-space: normal; /* Allow name to wrap if too long */
+        word-break: break-word;
+        text-align: center;
+    }
+
+    th:first-child, td:first-child {
+        text-align: left;
+        padding-left: 8px;
+        width: 30%; /* Give Besin more space */
+    }
+
+    /* Small inputs for multiplier in table */
+    td input[type="number"] {
+        width: 35px !important;
+        padding: 4px 2px !important;
+        font-size: 11px !important;
+    }
+
+    td .delete-btn {
+        padding: 6px 10px !important;
+        font-size: 10px !important;
     }
 
     /* Modals */

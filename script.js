@@ -390,15 +390,15 @@ function updateTable(selectedDate) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td data-label="Besin">${food.name}</td>
-            <td data-label="Kalori">${cal}</td>
-            <td data-label="Protein">${protein.toFixed(1)}</td>
-            <td data-label="Karbonhidrat">${carb.toFixed(1)}</td>
+            <td data-label="Cal">${cal}</td>
+            <td data-label="Pro">${protein.toFixed(1)}</td>
+            <td data-label="Karb">${carb.toFixed(1)}</td>
             <td data-label="Yağ">${fat.toFixed(1)}</td>
-            <td data-label="Porsiyon">
+            <td data-label="Por.">
                 <input type="number" min="1" value="${food.multiplier}" 
                     onchange="updateMultiplier(${index}, this.value)">
             </td>
-            <td data-label="İşlem"><button onclick="removeFood(${index})">Sil</button></td>
+            <td data-label="Sil"><button class="delete-btn" onclick="removeFood(${index})">Sil</button></td>
         `;
         tbody.appendChild(row);
 
