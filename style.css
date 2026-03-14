@@ -1669,6 +1669,29 @@ textarea#ai-prompt:focus {
         padding: 8px 10px;
     }
 
+    /* Icon Picker Mobile */
+    .icon-picker {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 6px;
+        padding: 8px;
+    }
+
+    .icon-option {
+        width: 100%;
+        height: 38px;
+        font-size: 0.9rem;
+    }
+
+    .macro-edit-grid {
+        gap: 8px !important;
+    }
+
+    .macro-edit-grid input {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+    }
+
     /* Disable hover transforms on touch devices */
     button:hover {
         transform: none;
