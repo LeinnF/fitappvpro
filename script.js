@@ -84,12 +84,9 @@ function loadFromFirebase() {
     db.collection('users').doc(currentUser.uid).collection('data').doc('customFavorites').get().then(doc => {
         if (doc.exists) {
             const cloudFavs = doc.data();
-            // Merge with local
-            const localFavs = JSON.parse(localStorage.getItem('customFavorites')) || {};
-            const merged = { ...cloudFavs, ...localFavs };
             
-            // Update presetFoods with merged data
-            for (const [name, data] of Object.entries(merged)) {
+            // Merge cloud favorites into memories, cloud takes priority
+            for (const [name, data] of Object.entries(cloudFavs)) {
                 presetFoods[name] = data;
             }
             renderQuickButtons();
@@ -407,6 +404,13 @@ function openRecipeEditor(name) {
     const modal = document.getElementById('edit-recipe-modal');
     
     document.getElementById('recipe-edit-target').textContent = name;
+    
+    // Fill values
+    document.getElementById('edit-cal').value = food.cal || 0;
+    document.getElementById('edit-pro').value = food.protein || 0;
+    document.getElementById('edit-carb').value = food.carb || 0;
+    document.getElementById('edit-fat').value = food.fat || 0;
+    
     document.getElementById('edit-ingredients').value = food.recipe ? food.recipe.ingredients : '';
     document.getElementById('edit-instructions').value = food.recipe ? food.recipe.instructions : '';
     
@@ -421,29 +425,40 @@ function closeEditRecipeModal() {
 function saveRecipe() {
     if (!currentEditingFood) return;
     
+    const cal = parseFloat(document.getElementById('edit-cal').value) || 0;
+    const protein = parseFloat(document.getElementById('edit-pro').value) || 0;
+    const carb = parseFloat(document.getElementById('edit-carb').value) || 0;
+    const fat = parseFloat(document.getElementById('edit-fat').value) || 0;
+    
     const ingredients = document.getElementById('edit-ingredients').value.trim();
     const instructions = document.getElementById('edit-instructions').value.trim();
     
-    if (!ingredients && !instructions) {
-        deleteRecipe();
-        return;
+    // Update memory
+    presetFoods[currentEditingFood].cal = cal;
+    presetFoods[currentEditingFood].protein = protein;
+    presetFoods[currentEditingFood].carb = carb;
+    presetFoods[currentEditingFood].fat = fat;
+    
+    if (ingredients || instructions) {
+        presetFoods[currentEditingFood].recipe = {
+            ingredients: ingredients,
+            instructions: instructions
+        };
+    } else {
+        delete presetFoods[currentEditingFood].recipe;
     }
     
-    // Update presetFoods
-    presetFoods[currentEditingFood].recipe = {
-        ingredients: ingredients,
-        instructions: instructions
-    };
-    
-    // Save custom favorites if it's a custom food
+    // Save to localStorage
     const customFavorites = JSON.parse(localStorage.getItem('customFavorites')) || {};
     customFavorites[currentEditingFood] = presetFoods[currentEditingFood];
     localStorage.setItem('customFavorites', JSON.stringify(customFavorites));
+    
+    // Cloud Sync
     syncToFirebase('customFavorites', customFavorites);
     
     closeEditRecipeModal();
     renderQuickButtons();
-    alert('Tarif başarıyla kaydedildi!');
+    alert('Besin bilgileri başarıyla güncellendi!');
 }
 
 function deleteRecipe() {
