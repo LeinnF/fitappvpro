@@ -1205,3 +1205,230 @@ textarea#ai-prompt:focus {
         margin: 10% auto;
     }
 }
+
+/* ===================== */
+/* === MOBILE STYLES === */
+/* ===================== */
+
+/* Tablet */
+@media (max-width: 900px) {
+    main.dashboard-grid {
+        grid-template-columns: 1fr;
+        padding: 12px;
+        gap: 16px;
+    }
+
+    .left-column,
+    .right-column {
+        gap: 16px;
+    }
+
+    section {
+        padding: 18px 16px;
+        border-radius: 20px;
+    }
+
+    section:hover {
+        transform: none;
+    }
+
+    .chart-wrapper {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .chart-container {
+        width: 130px;
+    }
+
+    .stats-text {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .macro-summary-grid {
+        gap: 8px 10px;
+    }
+
+    .val-box {
+        padding: 8px 4px;
+        font-size: 0.78rem;
+        min-height: 38px;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        min-width: 480px;
+    }
+}
+
+/* Phone */
+@media (max-width: 600px) {
+    main.dashboard-grid {
+        padding: 8px;
+        gap: 12px;
+    }
+
+    .main-header {
+        padding: 12px 16px;
+    }
+
+    .main-header .logo {
+        font-size: 1.2rem;
+    }
+
+    section {
+        padding: 16px 14px;
+        border-radius: 18px;
+    }
+
+    h2 {
+        font-size: 1rem;
+        margin-bottom: 14px;
+    }
+
+    /* Input section */
+    .input-group {
+        gap: 8px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    input[type="password"],
+    textarea {
+        padding: 10px 14px;
+        font-size: 16px; /* Prevent iOS zoom on input focus */
+    }
+
+    .action-buttons {
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    button {
+        padding: 12px 16px;
+        font-size: 0.9rem;
+    }
+
+    /* Category buttons */
+    .category-menu {
+        gap: 8px;
+        padding: 4px 2px;
+    }
+
+    .cat-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    /* Quick food grid – 4 columns on phone */
+    .quick-food-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+
+    .quick-food-grid button {
+        min-height: 80px;
+        padding: 8px 4px;
+        font-size: 0.65rem;
+        border-radius: 14px;
+        gap: 4px;
+    }
+
+    .quick-food-grid button i {
+        font-size: 1.1rem;
+    }
+
+    /* Water tracker */
+    .water-controls {
+        gap: 10px;
+    }
+
+    .water-amount {
+        font-size: 2rem;
+    }
+
+    .water-buttons {
+        gap: 10px;
+    }
+
+    .water-buttons button {
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
+    }
+
+    /* Summary section */
+    .summary-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .chart-container {
+        width: 110px;
+    }
+
+    .macro-summary-grid {
+        grid-template-columns: auto repeat(4, 1fr);
+        gap: 6px 8px;
+    }
+
+    .val-box {
+        font-size: 0.7rem;
+        padding: 6px 2px;
+        min-height: 34px;
+        border-radius: 10px;
+    }
+
+    .row-label {
+        font-size: 0.75rem;
+        padding-right: 6px;
+    }
+
+    .grid-header {
+        font-size: 0.65rem;
+    }
+
+    /* Table */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        min-width: 440px;
+        font-size: 0.8rem;
+    }
+
+    th, td {
+        padding: 8px 6px;
+    }
+
+    /* Modals */
+    .modal-content {
+        margin: 4% auto;
+        padding: 20px 16px;
+        border-radius: 20px;
+        width: 94%;
+    }
+
+    /* Date navigation */
+    .date-navigation input[type="date"] {
+        font-size: 0.85rem;
+        padding: 8px 10px;
+    }
+
+    /* Disable hover transforms on touch devices */
+    button:hover {
+        transform: none;
+    }
+    .val-box:hover {
+        transform: none;
+    }
+}
