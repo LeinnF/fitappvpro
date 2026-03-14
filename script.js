@@ -44,6 +44,7 @@ auth.onAuthStateChanged(user => {
         // Load data from localStorage (guest mode)
         allData = JSON.parse(localStorage.getItem('dailyData')) || {};
         target = JSON.parse(localStorage.getItem('userSettings')) || defaultSettings;
+        if (!allData[today]) allData[today] = { foodData: [], water: 0 };
         loadFavorites();
         updateTable(currentDate);
         renderQuickButtons();
@@ -70,6 +71,7 @@ function loadFromFirebase() {
     db.collection('users').doc(currentUser.uid).collection('data').doc('dailyData').get().then(doc => {
         if (doc.exists) {
             allData = doc.data();
+            localStorage.setItem('dailyData', JSON.stringify(allData));
             // Handle migration if local is newer (optional, but let's keep it simple for now)
         } else {
             // New user or no cloud data, use local
@@ -83,6 +85,7 @@ function loadFromFirebase() {
     db.collection('users').doc(currentUser.uid).collection('data').doc('userSettings').get().then(doc => {
         if (doc.exists) {
             target = doc.data();
+            localStorage.setItem('userSettings', JSON.stringify(target));
         } else {
             target = JSON.parse(localStorage.getItem('userSettings')) || defaultSettings;
         }
@@ -929,6 +932,7 @@ function confirmAIResult() {
     }
 
     closeAIModal();
+    clearFoodInputs();
     alert('Besin eklendi!');
 }
 

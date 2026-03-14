@@ -330,19 +330,20 @@
                     </div>
                 </div>
 
-                <label>Malzemeler</label>
-                <textarea id="edit-ingredients" placeholder="Her malzemeyi yeni bir satıra yazın..." style="height: 120px;"></textarea>
-                
-                <textarea id="edit-instructions" placeholder="Adım adım nasıl hazırlandığını anlatın..." style="height: 150px;"></textarea>
-                
                 <label style="margin-top: 15px; display: block;">İkon Seçin</label>
-                <div class="icon-picker" id="edit-icon-picker">
+                <div class="icon-picker" id="edit-icon-picker" style="margin-bottom: 20px;">
                     <!-- Icons will be injected by JS -->
                 </div>
 
+                <label>Malzemeler</label>
+                <textarea id="edit-ingredients" placeholder="Her malzemeyi yeni bir satıra yazın..." style="height: 80px;"></textarea>
+                
+                <label style="margin-top: 10px; display: block;">Hazırlanış</label>
+                <textarea id="edit-instructions" placeholder="Adım adım nasıl hazırlandığını anlatın..." style="height: 100px;"></textarea>
+                
                 <div class="action-buttons" style="margin-top: 25px; gap: 12px; display: grid; grid-template-columns: 1fr 1fr;">
                     <button onclick="saveRecipe()" class="success-btn" style="width: 100%;"><i class="fas fa-save"></i> Kaydet</button>
-                    <button onclick="deleteRecipe()" class="secondary-btn" style="width: 100%; background-color: #FEE2E2; color: #EF4444;"><i class="fas fa-trash-alt"></i> Tarifi Sil</button>
+                    <button onclick="deleteRecipe()" class="secondary-btn" style="width: 100%; background-color: #FEE2E2; color: #EF4444;"><i class="fas fa-trash-alt"></i> Sil</button>
                 </div>
             </div>
         </div>
