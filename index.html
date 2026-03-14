@@ -80,6 +80,11 @@
                     <input type="number" id="food-carb" placeholder="Karbonhidrat (g)">
                     <input type="number" id="food-fat" placeholder="Yağ (g)">
                     <input type="number" id="food-multiplier" placeholder="Porsiyon" value="1" min="1">
+                    
+                    <label style="font-size: 0.85rem; margin-top: 10px; display: block; color: var(--text-secondary);">İkon Seçin</label>
+                    <div class="icon-picker" id="entry-icon-picker">
+                        <!-- Icons will be injected by JS -->
+                    </div>
                 </div>
                 <div class="action-buttons">
                     <button onclick="addFood()" class="primary-btn"><i class="fas fa-plus"></i> Ekle</button>
@@ -328,9 +333,13 @@
                 <label>Malzemeler</label>
                 <textarea id="edit-ingredients" placeholder="Her malzemeyi yeni bir satıra yazın..." style="height: 120px;"></textarea>
                 
-                <label>Hazırlanışı</label>
                 <textarea id="edit-instructions" placeholder="Adım adım nasıl hazırlandığını anlatın..." style="height: 150px;"></textarea>
                 
+                <label style="margin-top: 15px; display: block;">İkon Seçin</label>
+                <div class="icon-picker" id="edit-icon-picker">
+                    <!-- Icons will be injected by JS -->
+                </div>
+
                 <div class="action-buttons" style="margin-top: 25px; gap: 12px; display: grid; grid-template-columns: 1fr 1fr;">
                     <button onclick="saveRecipe()" class="success-btn" style="width: 100%;"><i class="fas fa-save"></i> Kaydet</button>
                     <button onclick="deleteRecipe()" class="secondary-btn" style="width: 100%; background-color: #FEE2E2; color: #EF4444;"><i class="fas fa-trash-alt"></i> Tarifi Sil</button>

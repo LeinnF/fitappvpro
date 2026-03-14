@@ -15,6 +15,15 @@ let isDeleteMode = false;
 let isEditMode = false;
 let currentEditingFood = null;
 let currentUser = null;
+let selectedIconEntry = 'fa-utensils';
+let selectedIconEdit = 'fa-utensils';
+
+const availableIcons = [
+    'fa-utensils', 'fa-egg', 'fa-bread-slice', 'fa-cheese', 'fa-cookie', 
+    'fa-blender', 'fa-mug-hot', 'fa-dumbbell', 'fa-bowl-food', 'fa-bowl-rice', 
+    'fa-drumstick-bite', 'fa-hotdog', 'fa-pizza-slice', 'fa-hamburger', 
+    'fa-apple-alt', 'fa-carrot', 'fa-ice-cream', 'fa-fish'
+];
 
 // Auth State Listener
 auth.onAuthStateChanged(user => {
@@ -136,6 +145,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load custom favorites
     loadFavorites();
 
+    // Initialize Icon Pickers
+    renderIconPickers();
+
     // Initial Render
     updateTable(currentDate);
     renderQuickButtons();
@@ -214,6 +226,42 @@ document.addEventListener('click', (e) => {
     }
 });
 
+function renderIconPickers() {
+    const entryPicker = document.getElementById('entry-icon-picker');
+    const editPicker = document.getElementById('edit-icon-picker');
+    
+    if (!entryPicker || !editPicker) return;
+
+    entryPicker.innerHTML = '';
+    editPicker.innerHTML = '';
+
+    availableIcons.forEach(iconName => {
+        // Entry Picker
+        const entryOpt = document.createElement('div');
+        entryOpt.className = `icon-option ${iconName === selectedIconEntry ? 'selected' : ''}`;
+        entryOpt.innerHTML = `<i class="fas ${iconName}"></i>`;
+        entryOpt.onclick = () => selectIcon('entry', iconName);
+        entryPicker.appendChild(entryOpt);
+
+        // Edit Picker
+        const editOpt = document.createElement('div');
+        editOpt.className = `icon-option ${iconName === selectedIconEdit ? 'selected' : ''}`;
+        editOpt.innerHTML = `<i class="fas ${iconName}"></i>`;
+        editOpt.onclick = () => selectIcon('edit', iconName);
+        editPicker.appendChild(editOpt);
+    });
+}
+
+function selectIcon(type, iconName) {
+    if (type === 'entry') {
+        selectedIconEntry = iconName;
+    } else {
+        selectedIconEdit = iconName;
+    }
+    renderIconPickers();
+}
+
+
 function renderQuickButtons() {
     const container = document.querySelector('.quick-food-grid');
     container.innerHTML = ''; // Clear existing
@@ -277,19 +325,20 @@ function addToFavorites() {
         return;
     }
 
-    // Save with selected category
-    presetFoods[name] = { cal, protein, carb, fat, category: category };
-
-    // Save to localStorage
+    const foodInfo = { cal, protein, carb, fat, category: category, icon: selectedIconEntry };
     const customFavorites = JSON.parse(localStorage.getItem('customFavorites')) || {};
-    customFavorites[name] = { cal, protein, carb, fat, category: category };
+    customFavorites[name] = foodInfo;
     localStorage.setItem('customFavorites', JSON.stringify(customFavorites));
-
+    
     // Cloud Sync
     syncToFirebase('customFavorites', customFavorites);
 
     // Update UI
+    presetFoods[name] = { ...foodInfo };
     renderQuickButtons();
+    // Reset icon selection
+    selectedIconEntry = 'fa-utensils';
+    renderIconPickers();
     // Switch to selected category so user sees the new item
     filterCategory(category);
     alert(`${name} favorilere eklendi!`);
@@ -316,22 +365,26 @@ function renderQuickFoodButton(name, containerElement) {
     btn.onclick = () => addPresetFood(name);
 
     let icon = 'fa-utensils';
-    const lowerName = name.toLowerCase();
-    if (lowerName.includes('pankek') || lowerName.includes('pan')) icon = 'fa-cookie';
-    else if (lowerName.includes('tost') || lowerName.includes('ekmek')) icon = 'fa-bread-slice';
-    else if (lowerName.includes('yumurta')) icon = 'fa-egg';
-    else if (lowerName.includes('peynir') || lowerName.includes('kaşar')) icon = 'fa-cheese';
-    else if (lowerName.includes('shake') || lowerName.includes('içecek')) icon = 'fa-blender';
-    else if (lowerName.includes('kahve') || lowerName.includes('nescafe')) icon = 'fa-mug-hot';
-    else if (lowerName.includes('protein') || lowerName.includes('creatin')) icon = 'fa-dumbbell';
-    else if (lowerName.includes('makarna')) icon = 'fa-bowl-food';
-    else if (lowerName.includes('pilav')) icon = 'fa-bowl-rice';
-    else if (lowerName.includes('tavuk')) icon = 'fa-drumstick-bite';
-    else if (lowerName.includes('döner') || lowerName.includes('et')) icon = 'fa-hotdog';
+    if (food.icon) {
+        icon = food.icon;
+    } else {
+        const lowerName = name.toLowerCase();
+        if (lowerName.includes('pankek') || lowerName.includes('pan')) icon = 'fa-cookie';
+        else if (lowerName.includes('tost') || lowerName.includes('ekmek')) icon = 'fa-bread-slice';
+        else if (lowerName.includes('yumurta')) icon = 'fa-egg';
+        else if (lowerName.includes('peynir') || lowerName.includes('kaşar')) icon = 'fa-cheese';
+        else if (lowerName.includes('shake') || lowerName.includes('içecek')) icon = 'fa-blender';
+        else if (lowerName.includes('kahve') || lowerName.includes('nescafe')) icon = 'fa-mug-hot';
+        else if (lowerName.includes('protein') || lowerName.includes('creatin')) icon = 'fa-dumbbell';
+        else if (lowerName.includes('makarna')) icon = 'fa-bowl-food';
+        else if (lowerName.includes('pilav')) icon = 'fa-bowl-rice';
+        else if (lowerName.includes('tavuk')) icon = 'fa-drumstick-bite';
+        else if (lowerName.includes('döner') || lowerName.includes('et')) icon = 'fa-hotdog';
+    }
 
     const displayName = name.replace(/([a-zA-ZçğıöşüÇĞİÖŞÜ0-9])\(/g, '$1 (');
 
-    if (food.category === 'custom') {
+    if (food.category === 'custom' && !food.icon) {
         icon = 'fa-star';
         btn.innerHTML = `<i class="fas ${icon}" style="color: #FBBF24;"></i> <span>${displayName}</span>`;
     } else {
@@ -402,6 +455,10 @@ function openRecipeEditor(name) {
     document.getElementById('edit-ingredients').value = food.recipe ? food.recipe.ingredients : '';
     document.getElementById('edit-instructions').value = food.recipe ? food.recipe.instructions : '';
     
+    // Set selected icon for edit
+    selectedIconEdit = food.icon || 'fa-utensils';
+    renderIconPickers();
+    
     modal.style.display = 'block';
 }
 
@@ -426,6 +483,7 @@ function saveRecipe() {
     presetFoods[currentEditingFood].protein = protein;
     presetFoods[currentEditingFood].carb = carb;
     presetFoods[currentEditingFood].fat = fat;
+    presetFoods[currentEditingFood].icon = selectedIconEdit;
     
     if (ingredients || instructions) {
         presetFoods[currentEditingFood].recipe = {
@@ -482,10 +540,26 @@ function addFood() {
         return;
     }
 
-    allData[currentDate].foodData.push({ name, cal, protein, carb, fat, multiplier });
+    allData[currentDate].foodData.push({ 
+        name, cal, protein, carb, fat, multiplier, 
+        icon: selectedIconEntry || 'fa-utensils' 
+    });
     saveData();
     updateTable(currentDate);
     clearFoodInputs();
+}
+
+function clearFoodInputs() {
+    document.getElementById('food-name').value = '';
+    document.getElementById('food-cal').value = '';
+    document.getElementById('food-protein').value = '';
+    document.getElementById('food-carb').value = '';
+    document.getElementById('food-fat').value = '';
+    document.getElementById('food-multiplier').value = '1';
+    
+    // Reset icon selection
+    selectedIconEntry = 'fa-utensils';
+    renderIconPickers();
 }
 
 function addPresetFood(name) {
@@ -508,6 +582,7 @@ function addPresetFood(name) {
         protein: food.protein,
         carb: food.carb,
         fat: food.fat,
+        icon: food.icon || 'fa-utensils',
         multiplier: 1
     });
     saveData();
@@ -830,7 +905,10 @@ function confirmAIResult() {
     }
 
     // Add to daily log
-    allData[currentDate].foodData.push({ name, cal, protein, carb, fat, multiplier: 1 });
+    allData[currentDate].foodData.push({ 
+        name, cal, protein, carb, fat, multiplier: 1, 
+        icon: 'fa-magic' 
+    });
     saveData();
     updateTable(currentDate);
 
@@ -838,11 +916,11 @@ function confirmAIResult() {
     if (saveFavorite) {
         const customFavorites = JSON.parse(localStorage.getItem('customFavorites')) || {};
         if (!customFavorites[name] && !presetFoods[name]) {
-            customFavorites[name] = { cal, protein, carb, fat, category: 'custom' };
+            customFavorites[name] = { cal, protein, carb, fat, category: 'custom', icon: 'fa-magic' };
             localStorage.setItem('customFavorites', JSON.stringify(customFavorites));
 
             // Update memory and UI
-            presetFoods[name] = { cal, protein, carb, fat, category: 'custom' };
+            presetFoods[name] = { cal, protein, carb, fat, category: 'custom', icon: 'fa-magic' };
             renderQuickButtons();
         }
     }
