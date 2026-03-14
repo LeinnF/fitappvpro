@@ -1066,40 +1066,6 @@ td input[type="number"] {
     font-size: 0.9rem;
 }
 
-/* Responsive Table for Mobile */
-@media screen and (max-width: 600px) {
-    thead {
-        display: none;
-    }
-
-    tr {
-        display: block;
-        margin-bottom: 15px;
-        background: #F8FAFC;
-        border-radius: 8px;
-        padding: 10px;
-    }
-
-    td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #E2E8F0;
-    }
-
-    td:last-child {
-        border-bottom: none;
-    }
-
-    td::before {
-        content: attr(data-label);
-        /* Relies on HTML modification if we want headers */
-        font-weight: 600;
-        color: var(--text-secondary);
-    }
-
-}
-
 /* AI Modal Styles */
 .modal {
     display: none;
